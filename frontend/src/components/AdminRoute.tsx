@@ -13,13 +13,18 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
       }
 
       try {
-        const res = await fetch("http://localhost:3000/profile", {
+        const res = await fetch("http://localhost:3000/auth/profile", {
           headers: { Authorization: `Bearer ${token}` },
         });
+
+        if (!res.ok) {
+          throw new Error("Token invalid or expired");
+        }
 
         const data = await res.json();
         setIsAdmin(data.role === "admin");
       } catch (err) {
+        console.error("Gagal validasi admin:", err);
         setIsAdmin(false);
       }
     };

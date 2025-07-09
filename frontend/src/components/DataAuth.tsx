@@ -4,10 +4,8 @@ import Swal from "sweetalert2";
 
 type User = {
   _id: string;
-  name: string;
-  email: string;
+  username: string;
   role: "user" | "admin";
-  createdAt: string;
 };
 
 export default function DataAuth() {
@@ -19,15 +17,33 @@ export default function DataAuth() {
     const fetchUsers = async () => {
       try {
         setLoading(true);
-        const res = await fetch("http://localhost:3000/user");
+
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error(
+            "Token tidak ditemukan. Silakan login terlebih dahulu."
+          );
+        }
+
+        const res = await fetch("http://localhost:3000/users", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.message || "Gagal mengambil data user");
+        }
+
         const data = await res.json();
         setUsers(data);
-      } catch (err) {
+      } catch (err: any) {
         console.error("Failed to fetch users", err);
         Swal.fire({
           icon: "error",
           title: "Error",
-          text: "Failed to load user data",
+          text: err.message || "Failed to load user data",
           confirmButtonColor: "#F15A24",
         });
       } finally {
@@ -40,10 +56,17 @@ export default function DataAuth() {
 
   const filteredUsers = users.filter(
     (user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.role.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const getTokenHeader = () => {
+    const token = localStorage.getItem("token");
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    };
+  };
 
   const handleChangePassword = async (userId: string) => {
     const { value: newPassword } = await Swal.fire({
@@ -66,12 +89,10 @@ export default function DataAuth() {
     if (newPassword) {
       try {
         const res = await fetch(
-          `http://localhost:3000/user/${userId}/password`,
+          `http://localhost:3000/users/${userId}/password`,
           {
             method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: getTokenHeader(),
             body: JSON.stringify({ password: newPassword }),
           }
         );
@@ -111,8 +132,9 @@ export default function DataAuth() {
     if (!result.isConfirmed) return;
 
     try {
-      const res = await fetch(`http://localhost:3000/user/${userId}`, {
+      const res = await fetch(`http://localhost:3000/users/${userId}`, {
         method: "DELETE",
+        headers: getTokenHeader(),
       });
 
       if (!res.ok) throw new Error("Failed to delete user");
@@ -143,11 +165,9 @@ export default function DataAuth() {
     const newRole = currentRole === "user" ? "admin" : "user";
 
     try {
-      const res = await fetch(`http://localhost:3000/user/${userId}/role`, {
+      const res = await fetch(`http://localhost:3000/users/${userId}/role`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: getTokenHeader(),
         body: JSON.stringify({ role: newRole }),
       });
 
@@ -276,12 +296,7 @@ export default function DataAuth() {
                     >
                       Name
                     </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Email
-                    </th>
+
                     <th
                       scope="col"
                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -303,11 +318,9 @@ export default function DataAuth() {
                       className="hover:bg-gray-50 transition-colors"
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {user.name}
+                        {user.username}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {user.email}
-                      </td>
+
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <span
                           className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer ${
