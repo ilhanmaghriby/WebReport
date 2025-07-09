@@ -4,6 +4,20 @@ const jwt = require("jsonwebtoken");
 const Report = require("../models/Report");
 const slugify = require("slugify");
 
+// Helper function to delete files
+const deleteFiles = (filePaths) => {
+  filePaths.forEach((filePath) => {
+    const fullPath = path.join(__dirname, "../", filePath);
+    try {
+      if (fs.existsSync(fullPath)) {
+        fs.unlinkSync(fullPath);
+      }
+    } catch (err) {
+      console.error("Gagal menghapus file:", fullPath, err);
+    }
+  });
+};
+
 // Get all reports
 exports.getAllReports = async (req, res) => {
   const reports = await Report.find().populate("userId", "name email");
@@ -35,6 +49,7 @@ exports.getReportById = async (req, res) => {
   }
   res.json(report);
 };
+
 // Create report
 exports.createReport = async (req, res) => {
   const token = req.headers.authorization?.split(" ")[1];
@@ -53,6 +68,7 @@ exports.createReport = async (req, res) => {
     const parsedItems = prasaranaItems ? JSON.parse(prasaranaItems) : [];
     const files = req.files || [];
 
+    // Process uploaded files for each prasarana item
     parsedItems.forEach((item, idx) => {
       const safeLokasi = slugify(item.lokasi || `lokasi-${idx}`, {
         lower: true,
@@ -89,6 +105,7 @@ exports.createReport = async (req, res) => {
       .json({ message: "Gagal menyimpan data", error: err.message });
   }
 };
+
 // Update report
 exports.updateReport = async (req, res) => {
   const { id } = req.params;
@@ -108,29 +125,67 @@ exports.updateReport = async (req, res) => {
       return res.status(404).json({ message: "Report tidak ditemukan" });
     }
 
-    oldReport.prasaranaItems.forEach((item) => {
-      item.images?.forEach((imgPath) => {
-        const fullPath = path.join(__dirname, "../", imgPath);
-        if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
-      });
-    });
+    // Identify deleted prasarana items and their images
+    const deletedItems = oldReport.prasaranaItems.filter(
+      (oldItem) =>
+        !parsedItems.some(
+          (newItem) => newItem._id && newItem._id === oldItem._id.toString()
+        )
+    );
 
+    // Delete images from deleted items
+    const imagesToDelete = deletedItems.flatMap((item) => item.images || []);
+    deleteFiles(imagesToDelete);
+
+    // Process new files for each prasarana item
     parsedItems.forEach((item, idx) => {
-      const safeLokasi = slugify(item.lokasi || `lokasi-${idx}`, {
-        lower: true,
-        strict: true,
-      });
-      item.images = files
-        .filter((file) => file.fieldname.startsWith(`prasarana_${idx}_img_`))
-        .map((file, i) => {
-          const ext = path.extname(file.originalname);
-          const newFilename = `${safeLokasi}-${Date.now()}-${i + 1}${ext}`;
-          const newPath = path.join("uploads", newFilename);
-          fs.renameSync(file.path, newPath);
-          return newPath;
+      if (!item._id) {
+        // New item - process all uploaded files
+        const safeLokasi = slugify(item.lokasi || `lokasi-${idx}`, {
+          lower: true,
+          strict: true,
         });
+        item.images = files
+          .filter((file) => file.fieldname.startsWith(`prasarana_${idx}_img_`))
+          .map((file, i) => {
+            const ext = path.extname(file.originalname);
+            const newFilename = `${safeLokasi}-${Date.now()}-${i + 1}${ext}`;
+            const newPath = path.join("uploads", newFilename);
+            fs.renameSync(file.path, newPath);
+            return newPath;
+          });
+      } else {
+        // Existing item - keep existing images and add new ones
+        const existingItem = oldReport.prasaranaItems.find(
+          (oldItem) => oldItem._id.toString() === item._id
+        );
+
+        if (existingItem) {
+          // Keep existing images
+          item.images = existingItem.images || [];
+
+          // Add new images
+          const newImages = files
+            .filter((file) =>
+              file.fieldname.startsWith(`prasarana_${idx}_img_`)
+            )
+            .map((file, i) => {
+              const ext = path.extname(file.originalname);
+              const newFilename = `${slugify(item.lokasi || `lokasi-${idx}`, {
+                lower: true,
+                strict: true,
+              })}-${Date.now()}-${i + 1}${ext}`;
+              const newPath = path.join("uploads", newFilename);
+              fs.renameSync(file.path, newPath);
+              return newPath;
+            });
+
+          item.images = [...item.images, ...newImages];
+        }
+      }
     });
 
+    // Update report
     oldReport.title = title;
     oldReport.sektor = sektor;
     oldReport.subsektor = subsektor;
@@ -186,19 +241,11 @@ exports.deleteReport = async (req, res) => {
       return res.status(404).json({ message: "Report tidak ditemukan" });
     }
 
-    // Delete associated image files
-    if (report.image && report.image.length > 0) {
-      for (const imagePath of report.image) {
-        const fullPath = path.join(__dirname, "../", imagePath);
-        try {
-          if (fs.existsSync(fullPath)) {
-            fs.unlinkSync(fullPath);
-          }
-        } catch (err) {
-          console.error("Gagal menghapus file gambar:", fullPath, err);
-        }
-      }
-    }
+    // Delete all associated image files
+    const allImages = report.prasaranaItems.flatMap(
+      (item) => item.images || []
+    );
+    deleteFiles(allImages);
 
     // Delete report from database
     await Report.findByIdAndDelete(req.params.id);

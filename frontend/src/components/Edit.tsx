@@ -29,6 +29,7 @@ interface PrasaranaItem {
   perkiraanKerusakan: number;
   perkiraanKerugian: number;
   keterangan: string;
+  images: File[]; // Tambahkan ini
 }
 
 export default function Edit() {
@@ -69,10 +70,9 @@ export default function Edit() {
     perkiraanKerusakan: 0,
     perkiraanKerugian: 0,
     keterangan: "",
+    images: [],
   });
 
-  const [images, setImages] = useState<File[]>([]);
-  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [formattedValues, setFormattedValues] = useState({
     nilaiBerat: "",
     nilaiSedang: "",
@@ -117,20 +117,24 @@ export default function Edit() {
         });
         const result = await res.json();
 
+        // Convert server data to match our PrasaranaItem interface
+        const prasaranaItems = (result.prasaranaItems || []).map(
+          (item: any) => ({
+            ...item,
+            images: [], // Initialize empty array for new images
+          })
+        );
+
         setData({
           title: result.title,
           sektor: result.sektor,
           subsektor: result.subsektor,
           sarana: result.sarana,
-          prasaranaItems: result.prasaranaItems || [],
+          prasaranaItems,
           keterangan: result.keterangan || "",
         });
 
-        setImageUrls(
-          (result.image || []).map((path: string) => path.replace(/\\/g, "/"))
-        );
-
-        // Reset currentPrasarana menjadi kosong
+        // Reset currentPrasarana
         setCurrentPrasarana({
           prasarana: "",
           kodeBarang: "",
@@ -157,9 +161,9 @@ export default function Edit() {
           perkiraanKerusakan: 0,
           perkiraanKerugian: 0,
           keterangan: "",
+          images: [],
         });
 
-        // Reset juga formattedValues
         setFormattedValues({
           nilaiBerat: "",
           nilaiSedang: "",
@@ -219,6 +223,7 @@ export default function Edit() {
       perkiraanKerusakan: 0,
       perkiraanKerugian: 0,
       keterangan: "",
+      images: [],
     });
 
     // Also reset formatted values
@@ -303,16 +308,41 @@ export default function Edit() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
+    let prasaranaItems = [...data.prasaranaItems];
+
+    // Tambahkan currentPrasarana terakhir (jika belum ditambahkan)
+    if (currentPrasarana.prasarana) {
+      const total =
+        currentPrasarana.perkiraanKerusakan +
+        currentPrasarana.perkiraanKerugian;
+      prasaranaItems.push({
+        ...currentPrasarana,
+        totalKerusakanDanKerugian: total,
+      });
+    }
+
     const formData = new FormData();
     formData.append("title", data.title);
     formData.append("sektor", data.sektor);
     formData.append("subsektor", data.subsektor);
     formData.append("sarana", data.sarana);
-    formData.append("prasaranaItems", JSON.stringify(data.prasaranaItems));
     formData.append("keterangan", data.keterangan);
 
-    images.forEach((img) => {
-      formData.append("images", img);
+    // Kirim data prasarana (tanpa gambar) sebagai JSON
+    const itemsWithoutImages = prasaranaItems.map((item, index) => {
+      return {
+        ...item,
+        images: item.images.map((_, i) => `prasarana_${index}_img_${i}`), // placeholder nama gambar
+      };
+    });
+
+    formData.append("prasaranaItems", JSON.stringify(itemsWithoutImages));
+
+    // Tambahkan file gambar-gambar ke FormData
+    prasaranaItems.forEach((item, index) => {
+      item.images.forEach((img, i) => {
+        formData.append(`prasarana_${index}_img_${i}`, img);
+      });
     });
 
     try {
@@ -324,14 +354,14 @@ export default function Edit() {
         body: formData,
       });
 
-      if (!res.ok) throw new Error("Gagal memperbarui data");
+      if (!res.ok) throw new Error("Gagal mengupdate data");
 
       const result = await res.json();
       console.log("Sukses:", result);
 
       Swal.fire({
         title: "Berhasil!",
-        text: "Data berhasil diperbarui.",
+        text: "Data berhasil diupdate.",
         icon: "success",
         confirmButtonText: "OK",
       }).then(() => {
@@ -341,7 +371,7 @@ export default function Edit() {
       console.error("Error:", err);
       Swal.fire({
         title: "Gagal!",
-        text: "Gagal memperbarui data.",
+        text: "Gagal mengupdate data.",
         icon: "error",
         confirmButtonText: "OK",
       });
@@ -430,20 +460,31 @@ export default function Edit() {
     setData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Update the handleImageChange function to match Upload.tsx
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const filesArray = Array.from(e.target.files);
-      setImages((prev) => [...prev, ...filesArray]);
+      const maxSize = 5 * 1024 * 1024; // 5 MB
+
+      const oversized = filesArray.find((file) => file.size > maxSize);
+      if (oversized) {
+        Swal.fire({
+          title: "Ukuran Terlalu Besar",
+          text: `File "${oversized.name}" melebihi batas 5 MB.`,
+          icon: "warning",
+          confirmButtonText: "OK",
+        });
+        return;
+      }
+
+      setCurrentPrasarana((prev) => ({
+        ...prev,
+        images: [...prev.images, ...filesArray],
+      }));
     }
   };
 
-  const removeImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const removeImageUrl = (index: number) => {
-    setImageUrls((prev) => prev.filter((_, i) => i !== index));
-  };
+  // Remove the old handleImageChangeForItem and related functions
 
   return (
     <form
@@ -534,6 +575,7 @@ export default function Edit() {
                     perkiraanKerusakan: 0,
                     perkiraanKerugian: 0,
                     keterangan: "",
+                    images: [],
                   });
                 }}
                 className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
@@ -594,6 +636,7 @@ export default function Edit() {
                     perkiraanKerusakan: 0,
                     perkiraanKerugian: 0,
                     keterangan: "",
+                    images: [],
                   });
                 }}
                 className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
@@ -888,6 +931,91 @@ export default function Edit() {
                   />
                 </div>
 
+                {/* Image Upload Section */}
+                <div className="mt-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Gambar (boleh lebih dari satu)
+                  </label>
+                  <div className="flex items-center justify-center w-full">
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <svg
+                          className="w-8 h-8 mb-4 text-gray-500"
+                          aria-hidden="true"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 20 16"
+                        >
+                          <path
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
+                          />
+                        </svg>
+                        <p className="mb-2 text-sm text-gray-500">
+                          <span className="font-semibold">
+                            Klik untuk upload
+                          </span>
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          PNG, JPG, JPEG (MAX. 5MB)
+                        </p>
+                      </div>
+                      <input
+                        type="file"
+                        name="images"
+                        multiple
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  {/* Gunakan currentPrasarana.images */}
+                  {currentPrasarana.images &&
+                    currentPrasarana.images.length > 0 && (
+                      <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                        {currentPrasarana.images.map((img, idx) => (
+                          <div key={idx} className="relative group">
+                            <img
+                              src={URL.createObjectURL(img)}
+                              alt={`preview-${idx}`}
+                              className="w-full h-32 object-cover rounded-lg"
+                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setCurrentPrasarana((prev) => ({
+                                  ...prev,
+                                  images: prev.images.filter(
+                                    (_, i) => i !== idx
+                                  ),
+                                }))
+                              }
+                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                </div>
+
                 <button
                   type="button"
                   onClick={addPrasarana}
@@ -996,112 +1124,6 @@ export default function Edit() {
               )}
             </div>
           )}
-
-          {/* Image Upload Section */}
-          <div className="mt-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Gambar (Jika Upload Ulang Gambar, Maka Gambar Lama Akan Hilang)
-            </label>
-            <div className="flex items-center justify-center w-full">
-              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <svg
-                    className="w-8 h-8 mb-4 text-gray-500"
-                    aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 20 16"
-                  >
-                    <path
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
-                    />
-                  </svg>
-                  <p className="mb-2 text-sm text-gray-500">
-                    <span className="font-semibold">Klik untuk upload</span>{" "}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    PNG, JPG, JPEG (MAX. 5MB)
-                  </p>
-                </div>
-                <input
-                  type="file"
-                  name="images"
-                  multiple
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
-              </label>
-            </div>
-
-            {images.length > 0 && (
-              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {images.map((img, idx) => (
-                  <div key={idx} className="relative group">
-                    <img
-                      src={URL.createObjectURL(img)}
-                      alt={`preview-${idx}`}
-                      className="w-full h-32 object-cover rounded-lg"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(idx)}
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {imageUrls.length > 0 && (
-              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {imageUrls.map((filename, idx) => (
-                  <div key={idx} className="relative group">
-                    <img
-                      src={`http://localhost:3000/${filename}`}
-                      alt={`Uploaded-${idx}`}
-                      className="w-full h-32 object-cover rounded-lg border"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeImageUrl(idx)}
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
