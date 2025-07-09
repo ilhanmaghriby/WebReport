@@ -7,8 +7,6 @@ interface ReportData {
   sektor: string;
   subsektor: string;
   uploadedBy: string;
-  lokasi: string;
-  image?: string[];
   prasaranaItems?: {
     prasarana: string;
     kodeBarang: string;
@@ -35,10 +33,8 @@ const Home: React.FC = () => {
           title: item.title,
           sektor: item.sektor,
           subsektor: item.subsektor,
-          lokasi: item.prasaranaItems?.[0]?.lokasi || "-",
-          image: item.prasaranaItems?.[0]?.images || [],
-          prasaranaItems: item.prasaranaItems || [],
           uploadedBy: item.userId?.username || "Unknown",
+          prasaranaItems: item.prasaranaItems || [],
         }));
 
         setReportData(doneReports);
@@ -58,12 +54,10 @@ const Home: React.FC = () => {
         {isLoading ? (
           <div className="flex justify-center items-center mt-20">
             <div
-              className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
+              className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent"
               role="status"
             >
-              <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
-                Loading...
-              </span>
+              <span className="sr-only">Loading...</span>
             </div>
           </div>
         ) : reportData.length === 0 ? (
@@ -79,7 +73,6 @@ const Home: React.FC = () => {
                 title={report.title}
                 sektor={report.sektor}
                 subsektor={report.subsektor}
-                image={report.image}
                 prasaranaItems={report.prasaranaItems}
                 uploadedBy={report.uploadedBy}
               />

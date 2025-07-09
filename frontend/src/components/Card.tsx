@@ -9,13 +9,13 @@ interface ReportCardProps {
   sektor: string;
   subsektor: string;
   uploadedBy: string;
-  image?: string[];
   prasaranaItems?: {
     prasarana: string;
     kodeBarang: string;
     lokasi: string;
     latitude?: number;
     longitude?: number;
+    images?: string[];
   }[];
 }
 
@@ -25,12 +25,16 @@ const ReportCard: React.FC<ReportCardProps> = ({
   sektor,
   subsektor,
   uploadedBy,
-  image = [],
   prasaranaItems = [],
 }) => {
   const [showMap, setShowMap] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
+
+  // Gabungkan semua gambar dari prasaranaItems
+  const allImages: string[] = prasaranaItems.flatMap(
+    (item) => item.images || []
+  );
 
   // Ambil lokasi dari setiap prasarana
   const mapLocations = prasaranaItems
@@ -42,7 +46,7 @@ const ReportCard: React.FC<ReportCardProps> = ({
     .filter((loc) => loc !== null) as { latitude: number; longitude: number }[];
 
   const handleImageClick = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % image.length);
+    setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
   };
 
   const handleExportExcel = async () => {
@@ -86,19 +90,19 @@ const ReportCard: React.FC<ReportCardProps> = ({
     >
       {/* Gambar */}
       <div className="w-full md:w-[300px] h-[200px] md:h-full flex items-center justify-center bg-gray-100 relative overflow-hidden">
-        {image.length > 0 ? (
+        {allImages.length > 0 ? (
           <>
             <img
-              src={`http://localhost:3000/${image[currentImageIndex]}`}
+              src={`http://localhost:3000/${allImages[currentImageIndex]}`}
               alt="Image"
               className={`w-full h-full object-cover cursor-pointer transition-transform duration-300 ${
                 isHovering ? "scale-105" : "scale-100"
               }`}
               onClick={handleImageClick}
             />
-            {image.length > 1 && (
+            {allImages.length > 1 && (
               <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded-full text-xs">
-                {currentImageIndex + 1}/{image.length}
+                {currentImageIndex + 1}/{allImages.length}
               </div>
             )}
           </>
