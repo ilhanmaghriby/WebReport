@@ -15,38 +15,37 @@ interface ReportData {
     lokasi: string;
     latitude?: number;
     longitude?: number;
+    images?: string[];
   }[];
 }
 
 const Home: React.FC = () => {
   const [reportData, setReportData] = useState<ReportData[]>([]);
-  const [isLoading, setIsLoading] = useState(true); // Tambahkan state loading
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setIsLoading(true); // Mulai loading
-        const response = await fetch("http://localhost:3000/report");
+        setIsLoading(true);
+        const response = await fetch("http://localhost:3000/report/verified");
         const data = await response.json();
 
-        const doneReports: ReportData[] = data
-          .filter((item: any) => item.status === "done")
-          .map((item: any) => ({
-            _id: item._id,
-            title: item.title,
-            sektor: item.sektor,
-            subsektor: item.subsektor,
-            lokasi: item.lokasi,
-            image: Array.isArray(item.image) ? item.image : [],
-            prasaranaItems: item.prasaranaItems || [],
-            uploadedBy: item.userId?.name || "Unknown",
-          }));
+        const doneReports: ReportData[] = data.map((item: any) => ({
+          _id: item._id,
+          title: item.title,
+          sektor: item.sektor,
+          subsektor: item.subsektor,
+          lokasi: item.prasaranaItems?.[0]?.lokasi || "-",
+          image: item.prasaranaItems?.[0]?.images || [],
+          prasaranaItems: item.prasaranaItems || [],
+          uploadedBy: item.userId?.username || "Unknown",
+        }));
 
         setReportData(doneReports);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
-        setIsLoading(false); // Selesai loading
+        setIsLoading(false);
       }
     };
 
@@ -72,7 +71,7 @@ const Home: React.FC = () => {
             Belum ada data yang masuk atau diverifikasi
           </div>
         ) : (
-          <div className="max-w-7xl mx-auto grid grid-cols-1  gap-6">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 gap-6">
             {reportData.map((report) => (
               <ReportCard
                 key={report._id}

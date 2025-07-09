@@ -256,3 +256,19 @@ exports.deleteReport = async (req, res) => {
     res.status(500).json({ message: "Gagal menghapus report", error });
   }
 };
+
+// Get verified reports
+exports.getVerifiedReports = async (req, res) => {
+  try {
+    const reports = await Report.find({ status: "done" }).populate(
+      "userId",
+      "username"
+    );
+
+    res.json(reports);
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Gagal mengambil report", error: err.message });
+  }
+};

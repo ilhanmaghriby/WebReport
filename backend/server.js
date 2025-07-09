@@ -9,7 +9,8 @@ require("dotenv").config();
 const authRoutes = require("./routes/auth");
 const reportRoutes = require("./routes/report");
 const userRoutes = require("./routes/user");
-const authMiddleware = require("./middleware/auth"); // Perhatikan path ini
+const authMiddleware = require("./middleware/auth");
+const Report = require("./models/Report"); // ⬅️ Tambahkan ini
 
 const app = express();
 
@@ -23,7 +24,7 @@ connectDB();
 
 // Routes
 app.use("/auth", authRoutes);
-app.use("/report", authMiddleware, reportRoutes); // Proteksi route report
+app.use("/report", reportRoutes); // Proteksi route report
 app.use("/users", authMiddleware, userRoutes); // Proteksi route users
 
 // Error Handler
