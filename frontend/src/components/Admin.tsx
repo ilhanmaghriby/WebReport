@@ -14,8 +14,7 @@ type Member = {
   createdAt: string;
   userId: {
     _id: string;
-    name: string;
-    email?: string;
+    username: string;
   };
   status: StatusType;
 };
@@ -133,7 +132,18 @@ export default function Admin() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const res = await fetch("http://localhost:3000/report");
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error(
+            "Token tidak ditemukan. Silakan login terlebih dahulu."
+          );
+        }
+        const res = await fetch("http://localhost:3000/report", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
         const data = await res.json();
 
         const formatted = data.map((item: any) => ({
@@ -161,7 +171,9 @@ export default function Admin() {
   const filteredMembers = members.filter(
     (member) =>
       member.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.userId?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.userId?.username
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       member.sektor.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.subsektor.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -170,11 +182,15 @@ export default function Admin() {
     const member = filteredMembers[idx];
 
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(
         `http://localhost:3000/report/${member.id}/verify`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({ status: value }),
         }
       );
@@ -232,7 +248,12 @@ export default function Admin() {
     if (!result.isConfirmed) return;
 
     try {
+      const token = localStorage.getItem("token");
+
       const res = await fetch(`http://localhost:3000/report/${member.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         method: "DELETE",
       });
 
@@ -421,7 +442,7 @@ export default function Admin() {
                         })}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {m.userId?.name || "-"}
+                        {m.userId?.username || "-"}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
                         {m.title}
