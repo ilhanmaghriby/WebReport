@@ -1,0 +1,375 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import Swal from "sweetalert2";
+
+type User = {
+  _id: string;
+  name: string;
+  email: string;
+  role: "user" | "admin";
+  createdAt: string;
+};
+
+export default function DataAuth() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch("http://localhost:3000/user");
+        const data = await res.json();
+        setUsers(data);
+      } catch (err) {
+        console.error("Failed to fetch users", err);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Failed to load user data",
+          confirmButtonColor: "#F15A24",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  const filteredUsers = users.filter(
+    (user) =>
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.role.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleChangePassword = async (userId: string) => {
+    const { value: newPassword } = await Swal.fire({
+      title: "Change Password",
+      input: "password",
+      inputLabel: "New Password",
+      inputPlaceholder: "Enter new password (min 6 characters)",
+      inputAttributes: {
+        minlength: "6",
+        autocapitalize: "off",
+        autocorrect: "off",
+      },
+      showCancelButton: true,
+      confirmButtonColor: "#F15A24",
+      cancelButtonColor: "#6B7280",
+      confirmButtonText: "Update",
+      cancelButtonText: "Cancel",
+    });
+
+    if (newPassword) {
+      try {
+        const res = await fetch(
+          `http://localhost:3000/user/${userId}/password`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ password: newPassword }),
+          }
+        );
+
+        if (!res.ok) throw new Error("Failed to update password");
+
+        Swal.fire({
+          icon: "success",
+          title: "Password Updated",
+          text: "Password has been changed successfully",
+          confirmButtonColor: "#F15A24",
+        });
+      } catch (error) {
+        console.error(error);
+        Swal.fire({
+          icon: "error",
+          title: "Update Failed",
+          text: "Failed to change password",
+          confirmButtonColor: "#F15A24",
+        });
+      }
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    const result = await Swal.fire({
+      title: "Delete this user?",
+      text: "This action cannot be undone!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#F15A24",
+      cancelButtonColor: "#6B7280",
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "Cancel",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const res = await fetch(`http://localhost:3000/user/${userId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error("Failed to delete user");
+
+      setUsers((prev) => prev.filter((user) => user._id !== userId));
+
+      Swal.fire({
+        icon: "success",
+        title: "Deleted!",
+        text: "User has been deleted.",
+        confirmButtonColor: "#F15A24",
+      });
+    } catch (error) {
+      console.error(error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to delete user",
+        confirmButtonColor: "#F15A24",
+      });
+    }
+  };
+
+  const handleChangeRole = async (
+    userId: string,
+    currentRole: "user" | "admin"
+  ) => {
+    const newRole = currentRole === "user" ? "admin" : "user";
+
+    try {
+      const res = await fetch(`http://localhost:3000/user/${userId}/role`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ role: newRole }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update role");
+
+      setUsers((prev) =>
+        prev.map((user) =>
+          user._id === userId ? { ...user, role: newRole } : user
+        )
+      );
+
+      Swal.fire({
+        icon: "success",
+        title: "Role Updated",
+        text: `User role changed to ${newRole}`,
+        confirmButtonColor: "#F15A24",
+      });
+    } catch (error) {
+      console.error(error);
+      Swal.fire({
+        icon: "error",
+        title: "Update Failed",
+        text: "Failed to change user role",
+        confirmButtonColor: "#F15A24",
+      });
+    }
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto p-4 md:p-6 mt-16">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+            User Accounts Management
+          </h1>
+          <p className="text-gray-500">Manage all registered user accounts</p>
+        </div>
+        <div className="flex gap-3 w-full md:w-auto">
+          <div className="relative w-full md:w-64">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg
+                className="h-5 w-5 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+            <input
+              type="text"
+              placeholder="Search users..."
+              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F15A24] focus:border-transparent"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <Link
+            to="/"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+              />
+            </svg>
+            Home
+          </Link>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center items-center py-20">
+          <div className="flex flex-col items-center gap-4">
+            <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-[#F15A24] border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
+            <span className="text-gray-500">Loading users...</span>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          {filteredUsers.length === 0 ? (
+            <div className="p-8 text-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-16 w-16 mx-auto text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+              <h3 className="mt-4 text-lg font-medium text-gray-700">
+                No users found
+              </h3>
+              <p className="mt-1 text-gray-500">
+                Try adjusting your search or filter
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Name
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Email
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Role
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredUsers.map((user) => (
+                    <tr
+                      key={user._id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {user.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {user.email}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <span
+                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer ${
+                            user.role === "admin"
+                              ? "bg-purple-100 text-purple-800 hover:bg-purple-200"
+                              : "bg-green-100 text-green-800 hover:bg-green-200"
+                          }`}
+                          onClick={() => handleChangeRole(user._id, user.role)}
+                        >
+                          {user.role}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                        <button
+                          onClick={() => handleChangePassword(user._id)}
+                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-[#F15A24] hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4 mr-1"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                            />
+                          </svg>
+                          Change Password
+                        </button>
+                        <button
+                          onClick={() => handleDeleteUser(user._id)}
+                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4 mr-1"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
