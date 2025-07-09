@@ -20,7 +20,7 @@ const deleteFiles = (filePaths) => {
 
 // Get all reports
 exports.getAllReports = async (req, res) => {
-  const reports = await Report.find().populate("userId", "name email");
+  const reports = await Report.find().populate("userId", "username");
   res.json(reports);
 };
 

@@ -270,7 +270,12 @@ export default function Admin() {
 
   const handleViewClick = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:3000/report/${id}`);
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://localhost:3000/report/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const detail = await res.json();
 
       const title = detail?.title || "Damage_Report";
