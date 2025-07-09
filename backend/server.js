@@ -5,10 +5,11 @@ const multer = require("multer");
 const connectDB = require("./config/db");
 require("dotenv").config();
 
-// Import routes
+// Import routes dan middleware
 const authRoutes = require("./routes/auth");
 const reportRoutes = require("./routes/report");
 const userRoutes = require("./routes/user");
+const authMiddleware = require("./middleware/auth"); // Perhatikan path ini
 
 const app = express();
 
@@ -21,9 +22,9 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 connectDB();
 
 // Routes
-app.use(authRoutes);
-app.use("/report", reportRoutes);
-app.use(userRoutes);
+app.use("/auth", authRoutes);
+app.use("/report", authMiddleware, reportRoutes); // Proteksi route report
+app.use("/users", authMiddleware, userRoutes); // Proteksi route users
 
 // Error Handler
 app.use((err, req, res, next) => {
@@ -31,16 +32,20 @@ app.use((err, req, res, next) => {
     return res.status(400).json({ message: "Ukuran file maksimal 5 MB" });
   }
 
+  if (err.name === "UnauthorizedError") {
+    return res.status(401).json({ message: "Otentikasi gagal" });
+  }
+
   if (typeof err === "string") {
     return res.status(400).json({ message: err });
   }
 
-  console.error("❌ Unexpected error:", err);
-  res.status(500).json({ message: "Terjadi kesalahan pada server" });
+  console.error("❌ Error:", err);
+  res.status(500).json({ message: "Terjadi kesalahan server" });
 });
 
 // Start Server
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server berjalan di port ${PORT}`);
 });

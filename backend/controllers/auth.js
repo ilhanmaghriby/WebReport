@@ -1,39 +1,62 @@
-const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const jwt = require("jsonwebtoken");
 
-// Login
 exports.login = async (req, res) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email });
+  const { username, password } = req.body;
 
-  if (!user) return res.status(404).json({ message: "User not found" });
-  if (user.password !== password)
-    return res.status(401).json({ message: "Invalid credentials" });
-
-  const token = jwt.sign({ id: user._id, role: user.role }, "yokoso123", {
-    expiresIn: "1d",
-  });
-
-  res.status(200).json({ message: "Login successful", token });
-};
-
-// Profile
-exports.profile = async (req, res) => {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(401).json({ message: "No token provided" });
+  if (!username || !password) {
+    return res
+      .status(400)
+      .json({ message: "Username and password are required" });
+  }
 
   try {
-    const decoded = jwt.verify(token, "yokoso123");
-    const user = await User.findById(decoded.id);
+    // Find user by username
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
 
-    if (!user) return res.status(404).json({ message: "User not found" });
+    // Note: In real application, use bcrypt to compare hashed passwords
+    if (user.password !== password) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
 
-    res.json({
-      email: user.email,
-      name: user.name,
-      role: user.role,
-    });
+    // Generate token
+    const token = jwt.sign(
+      {
+        id: user._id,
+        username: user.username,
+        role: user.role,
+      },
+      "yokoso123",
+      { expiresIn: "1h" }
+    );
+
+    res.json({ token });
   } catch (err) {
-    res.status(401).json({ message: "Invalid token" });
+    console.error("Login failed:", err);
+    res.status(500).json({ message: "Login failed", error: err.message });
+  }
+};
+
+exports.profile = async (req, res) => {
+  try {
+    // User info is attached to req by authMiddleware
+    const user = req.user;
+
+    // Get fresh data from database (optional)
+    const userData = await User.findById(user.id, { password: 0 });
+
+    if (!userData) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(userData);
+  } catch (err) {
+    console.error("Failed to fetch profile:", err);
+    res
+      .status(500)
+      .json({ message: "Failed to fetch profile", error: err.message });
   }
 };

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -13,10 +13,10 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:3000/login", {
+      const response = await fetch("http://localhost:3000/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, password }),
       });
 
       const data = await response.json();
@@ -37,7 +37,7 @@ export default function Login() {
         Swal.fire({
           icon: "error",
           title: "Login Failed",
-          text: data.message || "Invalid email or password",
+          text: data.message || "Invalid username or password",
           confirmButtonColor: "#F15A24",
         });
       }
@@ -81,19 +81,19 @@ export default function Login() {
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
             <label
-              htmlFor="email"
+              htmlFor="username"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
               Username
             </label>
             <div className="relative">
               <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="py-3 px-4 block w-full border border-gray-300 rounded-lg text-sm focus:border-[#F15A24] focus:ring-[#F15A24] transition shadow-sm"
-                placeholder="you@example.com"
+                placeholder="Enter your username"
                 required
               />
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -101,9 +101,13 @@ export default function Login() {
                   className="h-5 w-5 text-gray-400"
                   fill="currentColor"
                   viewBox="0 0 20 20"
+                  xmlns="http://www.w3.org/2000/svg"
                 >
-                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                  <path
+                    fillRule="evenodd"
+                    d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
             </div>
@@ -117,12 +121,6 @@ export default function Login() {
               >
                 Password
               </label>
-              {/* <a
-                href="#"
-                className="text-sm font-medium text-[#F15A24] hover:text-orange-600"
-              >
-                Forgot password?
-              </a> */}
             </div>
             <div className="relative">
               <input
@@ -186,16 +184,6 @@ export default function Login() {
             </button>
           </div>
         </form>
-
-        {/* <div className="mt-6 text-center text-sm text-gray-500">
-          Don't have an account?{" "}
-          <a
-            href="#"
-            className="font-medium text-[#F15A24] hover:text-orange-600"
-          >
-            Contact admin
-          </a>
-        </div> */}
       </div>
     </div>
   );

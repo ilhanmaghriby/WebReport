@@ -5,7 +5,7 @@ import Swal from "sweetalert2";
 
 export default function NavbarProfile() {
   const [open, setOpen] = useState(false);
-  const [user, setUser] = useState({ email: "", name: "", role: "" });
+  const [user, setUser] = useState({ username: "", role: "" });
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
@@ -18,7 +18,7 @@ export default function NavbarProfile() {
       }
 
       try {
-        const res = await fetch("http://localhost:3000/profile", {
+        const res = await fetch("http://localhost:3000/auth/profile", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -94,14 +94,13 @@ export default function NavbarProfile() {
             >
               <div className="hidden sm:flex flex-col items-end leading-tight">
                 <span className="font-medium text-sm text-gray-800 group-hover:text-[#F15A24] transition-colors">
-                  {user.name}
+                  {user.username}
                 </span>
-                <span className="text-xs text-gray-500">{user.email}</span>
               </div>
 
               <div className="relative">
                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#F15A24] flex items-center justify-center text-white font-medium text-sm">
-                  {user.name.charAt(0).toUpperCase()}
+                  {user.username.charAt(0).toUpperCase()}
                 </div>
                 <svg
                   className={`absolute -bottom-1 -right-4 w-4 h-4 text-gray-400 transition-transform duration-200 ${
@@ -126,9 +125,8 @@ export default function NavbarProfile() {
               <div className="absolute right-0 top-12 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50">
                 <div className="px-4 py-3 border-b border-gray-100">
                   <p className="text-sm font-medium text-gray-900">
-                    {user.name}
+                    {user.username}
                   </p>
-                  <p className="text-xs text-gray-500 truncate">{user.email}</p>
                 </div>
 
                 {user.role === "admin" && (
