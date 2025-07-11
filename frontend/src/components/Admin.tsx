@@ -27,7 +27,7 @@ function StatusBadge({ status }: { status: StatusType }) {
     { text: string; bg: string; color: string; icon: JSX.Element }
   > = {
     done: {
-      text: "Completed",
+      text: "Selesai",
       bg: "bg-green-50",
       color: "text-green-700",
       icon: (
@@ -48,7 +48,7 @@ function StatusBadge({ status }: { status: StatusType }) {
       ),
     },
     in_progress: {
-      text: "In Progress",
+      text: "Sedang Diproses",
       bg: "bg-yellow-50",
       color: "text-yellow-700",
       icon: (
@@ -69,7 +69,7 @@ function StatusBadge({ status }: { status: StatusType }) {
       ),
     },
     perbaikan: {
-      text: "Needs Revision",
+      text: "Butuh Revisi",
       bg: "bg-blue-50",
       color: "text-blue-700",
       icon: (
@@ -90,7 +90,7 @@ function StatusBadge({ status }: { status: StatusType }) {
       ),
     },
     ditolak: {
-      text: "Rejected",
+      text: "Ditolak",
       bg: "bg-red-50",
       color: "text-red-700",
       icon: (
@@ -129,6 +129,7 @@ export default function Admin() {
   const [dropdownIdx, setDropdownIdx] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -192,7 +193,6 @@ export default function Admin() {
       if (!res.ok) throw new Error("Gagal mengambil data laporan.");
       const detail = await res.json();
 
-      // Ambil semua gambar dari prasaranaItems
       const allImages: string[] =
         detail.prasaranaItems?.flatMap((item: any) => item.images || []) || [];
 
@@ -209,7 +209,7 @@ export default function Admin() {
       const folder = zip.folder("gambar")!;
 
       for (const relativeUrl of allImages) {
-        const fullUrl = `http://localhost:3000/${relativeUrl}`; // pastikan server menyajikan folder /uploads sebagai static
+        const fullUrl = `http://localhost:3000/${relativeUrl}`;
         const filename = relativeUrl.split("/").pop() || "gambar.jpg";
 
         const imageRes = await fetch(fullUrl);
@@ -369,7 +369,7 @@ export default function Admin() {
             <input
               type="text"
               placeholder="Cari laporan..."
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F15A24] focus:border-transparent"
+              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:border-transparent"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -490,9 +490,8 @@ export default function Admin() {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                         <button
                           onClick={() => handleViewClick(m.id)}
-                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-[#F15A24] hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-[#F15A24] hover:bg-orange-700 focus:outline-none"
                         >
-                          {/* Ikon View */}
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             className="h-4 w-4 mr-1"
@@ -519,7 +518,7 @@ export default function Admin() {
                           onClick={() =>
                             handleDownloadImagesAsZip(m.id, m.title)
                           }
-                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-[#1E3A8A] hover:bg-[#1E40AF] focus:outline-none transition-colors duration-200"
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -532,19 +531,26 @@ export default function Admin() {
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               strokeWidth={2}
-                              d="M4 4v16h16V4H4zm4 8h8"
+                              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                             />
                           </svg>
                           Unduh Gambar
                         </button>
 
-                        <div className=" inline-block text-left">
+                        <div className="relative inline-block text-left">
                           <button
                             type="button"
-                            className="inline-flex items-center p-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                            className="inline-flex items-center p-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
                             onClick={(e) => {
                               e.stopPropagation();
+                              e.preventDefault();
+                              const rect =
+                                e.currentTarget.getBoundingClientRect();
                               setDropdownIdx(idx === dropdownIdx ? null : idx);
+                              setDropdownPosition({
+                                top: rect.bottom + window.scrollY,
+                                left: rect.right - 224,
+                              });
                             }}
                           >
                             <svg
@@ -562,8 +568,15 @@ export default function Admin() {
                               />
                             </svg>
                           </button>
+
                           {dropdownIdx === idx && (
-                            <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                            <div
+                              className="origin-top-right fixed mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50"
+                              style={{
+                                top: `${dropdownPosition.top}px`,
+                                left: `${dropdownPosition.left}px`,
+                              }}
+                            >
                               <div
                                 className="py-1"
                                 role="menu"
