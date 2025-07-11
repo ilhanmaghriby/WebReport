@@ -201,9 +201,11 @@ export default function DataAuth() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
-            User Accounts Management
+            Manajemen Akun Pengguna
           </h1>
-          <p className="text-gray-500">Manage all registered user accounts</p>
+          <p className="text-gray-500">
+            Kelola semua akun pengguna yang terdaftar
+          </p>
         </div>
         <div className="flex gap-3 w-full md:w-auto">
           <div className="relative w-full md:w-64">
@@ -224,7 +226,7 @@ export default function DataAuth() {
             </div>
             <input
               type="text"
-              placeholder="Search users..."
+              placeholder="Cari pengguna..."
               className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F15A24] focus:border-transparent"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -248,7 +250,7 @@ export default function DataAuth() {
                 d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
               />
             </svg>
-            Home
+            Beranda
           </Link>
         </div>
       </div>
@@ -256,8 +258,8 @@ export default function DataAuth() {
       {loading ? (
         <div className="flex justify-center items-center py-20">
           <div className="flex flex-col items-center gap-4">
-            <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-[#F15A24] border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
-            <span className="text-gray-500">Loading users...</span>
+            <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-[#F15A24] border-r-transparent"></div>
+            <span className="text-gray-500">Memuat pengguna...</span>
           </div>
         </div>
       ) : (
@@ -279,10 +281,10 @@ export default function DataAuth() {
                 />
               </svg>
               <h3 className="mt-4 text-lg font-medium text-gray-700">
-                No users found
+                Pengguna tidak ditemukan
               </h3>
               <p className="mt-1 text-gray-500">
-                Try adjusting your search or filter
+                Coba ubah kata kunci pencarian atau filter
               </p>
             </div>
           ) : (
@@ -290,24 +292,14 @@ export default function DataAuth() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Name
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Nama
                     </th>
-
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Role
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Peran
                     </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Actions
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Aksi
                     </th>
                   </tr>
                 </thead>
@@ -320,7 +312,6 @@ export default function DataAuth() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {user.username}
                       </td>
-
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <span
                           className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer ${
@@ -330,7 +321,7 @@ export default function DataAuth() {
                           }`}
                           onClick={() => handleChangeRole(user._id, user.role)}
                         >
-                          {user.role}
+                          {user.role === "admin" ? "Admin" : "Pengguna"}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
@@ -352,7 +343,7 @@ export default function DataAuth() {
                               d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                             />
                           </svg>
-                          Change Password
+                          Ubah Kata Sandi
                         </button>
                         <button
                           onClick={() => handleDeleteUser(user._id)}
@@ -372,7 +363,7 @@ export default function DataAuth() {
                               d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                             />
                           </svg>
-                          Delete
+                          Hapus
                         </button>
                       </td>
                     </tr>

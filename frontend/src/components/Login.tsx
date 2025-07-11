@@ -59,11 +59,11 @@ export default function Login() {
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#F9FAFB] to-[#EFF1F3]">
       <div className="w-full max-w-md px-8 py-10 bg-white rounded-2xl shadow-xl mx-4">
         <div className="text-center mb-8">
-          <div className="mx-auto w-40 h-24  rounded-full flex items-center justify-center">
+          <div className="mx-auto w-40 h-24 rounded-full flex items-center justify-center">
             <img src={Logo} alt="Logo" />
           </div>
 
-          <p className="text-gray-500">Sign in to your account to continue</p>
+          <p className="text-gray-500">Masuk ke akun Anda untuk melanjutkan</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
@@ -72,7 +72,7 @@ export default function Login() {
               htmlFor="username"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Username
+              Nama Pengguna
             </label>
             <div className="relative">
               <input
@@ -81,7 +81,7 @@ export default function Login() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="py-3 px-4 block w-full border border-gray-300 rounded-lg text-sm focus:border-[#F15A24] focus:ring-[#F15A24] transition shadow-sm"
-                placeholder="Enter your username"
+                placeholder="Masukkan nama pengguna"
                 required
               />
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -107,7 +107,7 @@ export default function Login() {
                 htmlFor="password"
                 className="block text-sm font-medium text-gray-700"
               >
-                Password
+                Kata Sandi
               </label>
             </div>
             <div className="relative">
@@ -148,7 +148,7 @@ export default function Login() {
               {isLoading ? (
                 <>
                   <span className="animate-spin inline-block w-4 h-4 border-[3px] border-current border-t-transparent text-white rounded-full"></span>
-                  Signing in...
+                  Sedang masuk...
                 </>
               ) : (
                 <>
@@ -166,7 +166,7 @@ export default function Login() {
                       d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
                     />
                   </svg>
-                  Sign In
+                  Masuk
                 </>
               )}
             </button>

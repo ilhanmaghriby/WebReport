@@ -54,10 +54,10 @@ export default function Dashboard() {
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
-            My Reports
+            Laporan Saya
           </h1>
           <p className="text-gray-500 mt-1">
-            Track the status of your submitted reports
+            Pantau status laporan yang telah Anda kirim
           </p>
         </div>
         <div className="flex gap-3 w-full md:w-auto">
@@ -77,7 +77,7 @@ export default function Dashboard() {
                   d="M12 4v16m8-8H4"
                 />
               </svg>
-              Add New Report
+              Tambah Laporan Baru
             </button>
           </Link>
           <Link to="/" className="w-full md:w-auto">
@@ -96,37 +96,37 @@ export default function Dashboard() {
                   d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
                 />
               </svg>
-              Home
+              Beranda
             </button>
           </Link>
         </div>
       </div>
 
-      {/* Stats Summary - Moved to the top */}
+      {/* Ringkasan Statistik */}
       {reports.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-            <h3 className="text-sm font-medium text-gray-500">Total Reports</h3>
+            <h3 className="text-sm font-medium text-gray-500">Total Laporan</h3>
             <p className="mt-1 text-2xl font-bold text-gray-900">
               {statusCounts.total}
             </p>
           </div>
           <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-            <h3 className="text-sm font-medium text-gray-500">Completed</h3>
+            <h3 className="text-sm font-medium text-gray-500">Selesai</h3>
             <p className="mt-1 text-2xl font-bold text-green-600">
               {statusCounts.done}
             </p>
           </div>
           <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-            <h3 className="text-sm font-medium text-gray-500">In Progress</h3>
+            <h3 className="text-sm font-medium text-gray-500">
+              Sedang Diproses
+            </h3>
             <p className="mt-1 text-2xl font-bold text-yellow-600">
               {statusCounts.in_progress}
             </p>
           </div>
           <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-            <h3 className="text-sm font-medium text-gray-500">
-              Needs Revision
-            </h3>
+            <h3 className="text-sm font-medium text-gray-500">Perlu Revisi</h3>
             <p className="mt-1 text-2xl font-bold text-blue-600">
               {statusCounts.perbaikan}
             </p>
@@ -134,13 +134,13 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Table */}
+      {/* Tabel */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         {loading ? (
           <div className="flex justify-center items-center p-12">
             <div className="flex flex-col items-center gap-4">
-              <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-[#F15A24] border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
-              <span className="text-gray-500">Loading your reports...</span>
+              <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-[#F15A24] border-r-transparent"></div>
+              <span className="text-gray-500">Memuat laporan Anda...</span>
             </div>
           </div>
         ) : reports.length === 0 ? (
@@ -160,16 +160,16 @@ export default function Dashboard() {
               />
             </svg>
             <h3 className="mt-4 text-lg font-medium text-gray-700">
-              No reports found
+              Belum ada laporan
             </h3>
             <p className="mt-1 text-gray-500">
-              You haven't submitted any reports yet
+              Anda belum mengirimkan laporan apapun
             </p>
             <Link
               to="/upload"
               className="mt-4 inline-block px-4 py-2 text-sm font-medium rounded-lg bg-[#F15A24] text-white hover:bg-orange-600 transition"
             >
-              Submit your first report
+              Kirim Laporan Pertama Anda
             </Link>
           </div>
         ) : (
@@ -177,41 +177,23 @@ export default function Dashboard() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Upload Time
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Waktu Unggah
                   </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Title
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Judul
                   </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Sector
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Sektor
                   </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Sub-Sector
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Sub Sektor
                   </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Actions
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Aksi
                   </th>
                 </tr>
               </thead>
@@ -254,14 +236,14 @@ export default function Dashboard() {
                         }`}
                       >
                         {report.status === "in_progress"
-                          ? "In Progress"
+                          ? "Sedang Diproses"
                           : report.status === "done"
-                          ? "Completed"
+                          ? "Selesai"
                           : report.status === "perbaikan"
-                          ? "Needs Revision"
+                          ? "Perlu Revisi"
                           : report.status === "ditolak"
-                          ? "Rejected"
-                          : "Unknown"}
+                          ? "Ditolak"
+                          : "Tidak Diketahui"}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -272,8 +254,8 @@ export default function Dashboard() {
                           } else {
                             Swal.fire({
                               icon: "info",
-                              title: "Edit Not Available",
-                              text: "You can only edit reports that require revision.",
+                              title: "Tidak Bisa Diedit",
+                              text: "Anda hanya bisa mengedit laporan yang memerlukan revisi.",
                               confirmButtonColor: "#F15A24",
                             });
                           }

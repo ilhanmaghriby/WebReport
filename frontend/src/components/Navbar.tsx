@@ -157,7 +157,7 @@ export default function NavbarProfile() {
                             d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
                           />
                         </svg>
-                        Admin Panel
+                        Panel Admin
                       </div>
                     </Link>
                     <Link
@@ -180,7 +180,7 @@ export default function NavbarProfile() {
                             d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                           />
                         </svg>
-                        User Management
+                        Manajemen Pengguna
                       </div>
                     </Link>
                   </>
@@ -227,7 +227,7 @@ export default function NavbarProfile() {
                       d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
                     />
                   </svg>
-                  Logout
+                  Keluar
                 </button>
               </div>
             )}

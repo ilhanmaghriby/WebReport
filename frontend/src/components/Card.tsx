@@ -150,7 +150,7 @@ const ReportCard: React.FC<ReportCardProps> = ({
 
             <div className="bg-gray-50 p-3 rounded-lg col-span-2">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
-                Uploaded by
+                Diupload Oleh
               </p>
               <p className="text-gray-800 font-medium truncate">{uploadedBy}</p>
             </div>
@@ -182,7 +182,7 @@ const ReportCard: React.FC<ReportCardProps> = ({
                 d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
               />
             </svg>
-            Maps
+            Peta
           </button>
           <button
             onClick={handleExportExcel}
@@ -202,7 +202,7 @@ const ReportCard: React.FC<ReportCardProps> = ({
                 d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-            View Data
+            Lihat Data
           </button>
         </div>
       </div>

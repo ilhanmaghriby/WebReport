@@ -296,10 +296,10 @@ export default function Admin() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
-            Reports Management
+            Manajemen Laporan
           </h1>
           <p className="text-gray-500">
-            Manage and review all submitted reports
+            Kelola dan tinjau semua laporan yang telah dikirim
           </p>
         </div>
         <div className="flex gap-3 w-full md:w-auto">
@@ -321,7 +321,7 @@ export default function Admin() {
             </div>
             <input
               type="text"
-              placeholder="Search reports..."
+              placeholder="Cari laporan..."
               className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F15A24] focus:border-transparent"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -345,7 +345,7 @@ export default function Admin() {
                 d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
               />
             </svg>
-            Home
+            Beranda
           </Link>
         </div>
       </div>
@@ -353,8 +353,8 @@ export default function Admin() {
       {loading ? (
         <div className="flex justify-center items-center py-20">
           <div className="flex flex-col items-center gap-4">
-            <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-[#F15A24] border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
-            <span className="text-gray-500">Loading reports...</span>
+            <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-[#F15A24] border-r-transparent"></div>
+            <span className="text-gray-500">Memuat laporan...</span>
           </div>
         </div>
       ) : (
@@ -376,10 +376,10 @@ export default function Admin() {
                 />
               </svg>
               <h3 className="mt-4 text-lg font-medium text-gray-700">
-                No reports found
+                Tidak ada laporan ditemukan
               </h3>
               <p className="mt-1 text-gray-500">
-                Try adjusting your search or filter
+                Coba ubah kata kunci pencarian atau filter
               </p>
             </div>
           ) : (
@@ -387,47 +387,26 @@ export default function Admin() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Upload Time
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Waktu Unggah
                     </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Reporter
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Pengirim
                     </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Title
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Judul
                     </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Sector
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Sektor
                     </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Sub-Sector
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Sub Sektor
                     </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
-                    <th
-                      scope="col"
-                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Actions
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Aksi
                     </th>
                   </tr>
                 </thead>
@@ -466,6 +445,7 @@ export default function Admin() {
                           onClick={() => handleViewClick(m.id)}
                           className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-[#F15A24] hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
                         >
+                          {/* Ikon View */}
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             className="h-4 w-4 mr-1"
@@ -486,7 +466,7 @@ export default function Admin() {
                               d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                             />
                           </svg>
-                          View
+                          Lihat
                         </button>
                         <div className=" inline-block text-left">
                           <button
@@ -540,7 +520,7 @@ export default function Admin() {
                                       d="M5 13l4 4L19 7"
                                     />
                                   </svg>
-                                  Mark as Completed
+                                  Tandai Selesai
                                 </button>
                                 <button
                                   onClick={() =>
@@ -563,7 +543,7 @@ export default function Admin() {
                                       d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                                     />
                                   </svg>
-                                  Mark as In Progress
+                                  Tandai Sedang Diproses
                                 </button>
                                 <button
                                   onClick={() =>
@@ -586,7 +566,7 @@ export default function Admin() {
                                       d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                                     />
                                   </svg>
-                                  Request Revision
+                                  Minta Revisi
                                 </button>
                                 <button
                                   onClick={() =>
@@ -609,7 +589,7 @@ export default function Admin() {
                                       d="M6 18L18 6M6 6l12 12"
                                     />
                                   </svg>
-                                  Reject Report
+                                  Tolak Laporan
                                 </button>
                                 <div className="border-t border-gray-100"></div>
                                 <button
@@ -631,7 +611,7 @@ export default function Admin() {
                                       d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                                     />
                                   </svg>
-                                  Delete Report
+                                  Hapus Laporan
                                 </button>
                               </div>
                             </div>
