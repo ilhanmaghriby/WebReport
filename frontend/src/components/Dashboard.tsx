@@ -14,9 +14,22 @@ interface Report {
 export default function Dashboard() {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showFlowButton, setShowFlowButton] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Selalu tampilkan alert setiap masuk / refresh halaman
+    Swal.fire({
+      title: "Selamat Datang di Dashboard",
+      text: "Di sini Anda dapat melihat semua laporan yang telah Anda kirimkan dan statusnya.",
+      icon: "info",
+      confirmButtonText: "Mengerti",
+      confirmButtonColor: "#F15A24",
+    }).then(() => {
+      // Tampilkan tombol alur setelah alert ditutup
+      setShowFlowButton(true);
+    });
+
     const fetchReports = async () => {
       try {
         const token = localStorage.getItem("token");
@@ -40,6 +53,27 @@ export default function Dashboard() {
     fetchReports();
   }, []);
 
+  const showUsageFlow = () => {
+    Swal.fire({
+      title: "Alur Pemakaian Dashboard",
+      html: `
+        <div class="text-center">
+          <img 
+            src="/path-to-your-flow-image.png" 
+            alt="Alur Pemakaian Dashboard" 
+            class="mx-auto mb-4 max-w-full h-auto"
+            style="max-height: 400px;"
+          />
+          <p class="text-gray-600">Berikut adalah alur penggunaan dashboard laporan</p>
+        </div>
+      `,
+      showConfirmButton: true,
+      confirmButtonText: "Tutup",
+      confirmButtonColor: "#F15A24",
+      width: 800,
+    });
+  };
+
   const statusCounts = {
     total: reports.length,
     done: reports.filter((r) => r.status === "done").length,
@@ -61,6 +95,28 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="flex gap-3 w-full md:w-auto">
+          {showFlowButton && (
+            <button
+              onClick={showUsageFlow}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium bg-[#1E3A8A] hover:bg-[#1E40AF] text-white transition-all shadow-sm hover:shadow-md w-full justify-center md:w-auto"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              SOP
+            </button>
+          )}
           <Link to="/upload" className="w-full md:w-auto">
             <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium bg-[#F15A24] text-white hover:bg-orange-600 transition-all shadow-sm hover:shadow-md w-full justify-center">
               <svg
