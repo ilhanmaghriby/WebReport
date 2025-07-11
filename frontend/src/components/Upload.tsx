@@ -324,13 +324,13 @@ export default function Upload() {
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const filesArray = Array.from(e.target.files);
-      const maxSize = 5 * 1024 * 1024; // 5 MB
+      const maxSize = 1 * 1024 * 1024; // 1 MB
 
       const oversized = filesArray.find((file) => file.size > maxSize);
       if (oversized) {
         Swal.fire({
           title: "Ukuran Terlalu Besar",
-          text: `File "${oversized.name}" melebihi batas 5 MB.`,
+          text: `File "${oversized.name}" melebihi batas 1 MB.`,
           icon: "warning",
           confirmButtonText: "OK",
         });
@@ -883,7 +883,7 @@ export default function Upload() {
                           </span>
                         </p>
                         <p className="text-xs text-gray-500">
-                          PNG, JPG, JPEG (MAX. 5MB)
+                          PNG, JPG, JPEG (MAX. 1MB)
                         </p>
                       </div>
                       <input
