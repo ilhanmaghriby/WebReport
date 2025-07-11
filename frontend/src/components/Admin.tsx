@@ -2,6 +2,8 @@ import { useEffect, useState, type JSX } from "react";
 import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
 import { exportToExcel } from "./exportToExcel";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
 
 type StatusType = "done" | "in_progress" | "perbaikan" | "ditolak";
 
@@ -177,6 +179,52 @@ export default function Admin() {
       member.sektor.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.subsektor.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleDownloadImagesAsZip = async (id: string, title: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://localhost:3000/report/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) throw new Error("Gagal mengambil data laporan.");
+      const detail = await res.json();
+
+      // Ambil semua gambar dari prasaranaItems
+      const allImages: string[] =
+        detail.prasaranaItems?.flatMap((item: any) => item.images || []) || [];
+
+      if (allImages.length === 0) {
+        Swal.fire(
+          "Tidak Ada Gambar",
+          "Laporan ini tidak memiliki gambar.",
+          "info"
+        );
+        return;
+      }
+
+      const zip = new JSZip();
+      const folder = zip.folder("gambar")!;
+
+      for (const relativeUrl of allImages) {
+        const fullUrl = `http://localhost:3000/${relativeUrl}`; // pastikan server menyajikan folder /uploads sebagai static
+        const filename = relativeUrl.split("/").pop() || "gambar.jpg";
+
+        const imageRes = await fetch(fullUrl);
+        const blob = await imageRes.blob();
+
+        folder.file(filename, blob);
+      }
+
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      saveAs(zipBlob, `${title || "laporan"}_gambar.zip`);
+    } catch (error) {
+      console.error(error);
+      Swal.fire("Gagal", "Tidak dapat mengunduh gambar.", "error");
+    }
+  };
 
   const handleChangeProgress = async (idx: number, value: StatusType) => {
     const member = filteredMembers[idx];
@@ -467,6 +515,29 @@ export default function Admin() {
                           </svg>
                           Lihat
                         </button>
+                        <button
+                          onClick={() =>
+                            handleDownloadImagesAsZip(m.id, m.title)
+                          }
+                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4 mr-1"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 4v16h16V4H4zm4 8h8"
+                            />
+                          </svg>
+                          Unduh Gambar
+                        </button>
+
                         <div className=" inline-block text-left">
                           <button
                             type="button"
