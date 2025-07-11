@@ -115,7 +115,7 @@ const Home: React.FC = () => {
             Belum ada data yang masuk atau diverifikasi
           </div>
         ) : (
-          <div className="max-w-7xl mx-auto grid grid-cols-2 gap-6">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             {reportData.map((report) => (
               <ReportCard
                 key={report._id}
