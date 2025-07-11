@@ -159,7 +159,7 @@ export default function Admin() {
 
         setMembers(formatted);
       } catch (err) {
-        console.error("Gagal fetch data", err);
+        console.error("Gagal mengambil data", err);
       } finally {
         setLoading(false);
       }
@@ -195,7 +195,7 @@ export default function Admin() {
         }
       );
 
-      if (!res.ok) throw new Error("Gagal update status");
+      if (!res.ok) throw new Error("Gagal memperbarui status");
 
       const updated = await res.json();
 
@@ -208,16 +208,15 @@ export default function Admin() {
 
       Swal.fire({
         icon: "success",
-        title: "Status Updated",
-        text: `Report status changed to ${updated.status}`,
+        title: "Status Berhasil Diperbarui",
         confirmButtonColor: "#F15A24",
       });
     } catch (error) {
       console.error(error);
       Swal.fire({
         icon: "error",
-        title: "Update Failed",
-        text: "Failed to update status",
+        title: "Gagal Memperbarui",
+        text: "Status laporan gagal diperbarui.",
         confirmButtonColor: "#F15A24",
       });
     }
@@ -235,14 +234,14 @@ export default function Admin() {
     const member = filteredMembers[idx];
 
     const result = await Swal.fire({
-      title: "Delete this report?",
-      text: "This action cannot be undone!",
+      title: "Hapus laporan ini?",
+      text: "Tindakan ini tidak dapat dibatalkan!",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#F15A24",
       cancelButtonColor: "#6B7280",
-      confirmButtonText: "Yes, delete it!",
-      cancelButtonText: "Cancel",
+      confirmButtonText: "Ya, hapus!",
+      cancelButtonText: "Batal",
     });
 
     if (!result.isConfirmed) return;
@@ -257,14 +256,14 @@ export default function Admin() {
         method: "DELETE",
       });
 
-      if (!res.ok) throw new Error("Gagal menghapus data");
+      if (!res.ok) throw new Error("Gagal menghapus laporan");
 
       setMembers((prev) => prev.filter((m) => m.id !== member.id));
 
-      Swal.fire("Deleted!", "Report has been deleted.", "success");
+      Swal.fire("Berhasil!", "Laporan berhasil dihapus.", "success");
     } catch (error) {
       console.error(error);
-      Swal.fire("Error!", "Failed to delete report.", "error");
+      Swal.fire("Gagal!", "Terjadi kesalahan saat menghapus laporan.", "error");
     }
   };
 
@@ -278,14 +277,14 @@ export default function Admin() {
       });
       const detail = await res.json();
 
-      const title = detail?.title || "Damage_Report";
+      const title = detail?.title || "Laporan_Kerusakan";
       await exportToExcel([detail], title);
     } catch (err) {
       console.error("Gagal mengambil data:", err);
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: "Failed to fetch report details",
+        title: "Gagal",
+        text: "Gagal mengambil detail laporan.",
         confirmButtonColor: "#F15A24",
       });
     }

@@ -33,17 +33,17 @@ export default function DataAuth() {
 
         if (!res.ok) {
           const errorData = await res.json();
-          throw new Error(errorData.message || "Gagal mengambil data user");
+          throw new Error(errorData.message || "Gagal mengambil data pengguna");
         }
 
         const data = await res.json();
         setUsers(data);
       } catch (err: any) {
-        console.error("Failed to fetch users", err);
+        console.error("Gagal mengambil data pengguna", err);
         Swal.fire({
           icon: "error",
-          title: "Error",
-          text: err.message || "Failed to load user data",
+          title: "Kesalahan",
+          text: err.message || "Gagal memuat data pengguna",
           confirmButtonColor: "#F15A24",
         });
       } finally {
@@ -70,10 +70,10 @@ export default function DataAuth() {
 
   const handleChangePassword = async (userId: string) => {
     const { value: newPassword } = await Swal.fire({
-      title: "Change Password",
+      title: "Ubah Kata Sandi",
       input: "password",
-      inputLabel: "New Password",
-      inputPlaceholder: "Enter new password (min 6 characters)",
+      inputLabel: "Kata Sandi Baru",
+      inputPlaceholder: "Masukkan kata sandi baru (min 6 karakter)",
       inputAttributes: {
         minlength: "6",
         autocapitalize: "off",
@@ -82,8 +82,8 @@ export default function DataAuth() {
       showCancelButton: true,
       confirmButtonColor: "#F15A24",
       cancelButtonColor: "#6B7280",
-      confirmButtonText: "Update",
-      cancelButtonText: "Cancel",
+      confirmButtonText: "Perbarui",
+      cancelButtonText: "Batal",
     });
 
     if (newPassword) {
@@ -97,20 +97,20 @@ export default function DataAuth() {
           }
         );
 
-        if (!res.ok) throw new Error("Failed to update password");
+        if (!res.ok) throw new Error("Gagal memperbarui kata sandi");
 
         Swal.fire({
           icon: "success",
-          title: "Password Updated",
-          text: "Password has been changed successfully",
+          title: "Berhasil Diperbarui",
+          text: "Kata sandi berhasil diperbarui",
           confirmButtonColor: "#F15A24",
         });
       } catch (error) {
         console.error(error);
         Swal.fire({
           icon: "error",
-          title: "Update Failed",
-          text: "Failed to change password",
+          title: "Gagal Memperbarui",
+          text: "Gagal mengubah kata sandi",
           confirmButtonColor: "#F15A24",
         });
       }
@@ -119,14 +119,14 @@ export default function DataAuth() {
 
   const handleDeleteUser = async (userId: string) => {
     const result = await Swal.fire({
-      title: "Delete this user?",
-      text: "This action cannot be undone!",
+      title: "Hapus pengguna ini?",
+      text: "Tindakan ini tidak dapat dibatalkan!",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#F15A24",
       cancelButtonColor: "#6B7280",
-      confirmButtonText: "Yes, delete it!",
-      cancelButtonText: "Cancel",
+      confirmButtonText: "Ya, hapus!",
+      cancelButtonText: "Batal",
     });
 
     if (!result.isConfirmed) return;
@@ -137,22 +137,22 @@ export default function DataAuth() {
         headers: getTokenHeader(),
       });
 
-      if (!res.ok) throw new Error("Failed to delete user");
+      if (!res.ok) throw new Error("Gagal menghapus pengguna");
 
       setUsers((prev) => prev.filter((user) => user._id !== userId));
 
       Swal.fire({
         icon: "success",
-        title: "Deleted!",
-        text: "User has been deleted.",
+        title: "Berhasil Dihapus!",
+        text: "Pengguna telah dihapus.",
         confirmButtonColor: "#F15A24",
       });
     } catch (error) {
       console.error(error);
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: "Failed to delete user",
+        title: "Kesalahan",
+        text: "Gagal menghapus pengguna",
         confirmButtonColor: "#F15A24",
       });
     }
@@ -171,7 +171,7 @@ export default function DataAuth() {
         body: JSON.stringify({ role: newRole }),
       });
 
-      if (!res.ok) throw new Error("Failed to update role");
+      if (!res.ok) throw new Error("Gagal memperbarui peran");
 
       setUsers((prev) =>
         prev.map((user) =>
@@ -181,16 +181,16 @@ export default function DataAuth() {
 
       Swal.fire({
         icon: "success",
-        title: "Role Updated",
-        text: `User role changed to ${newRole}`,
+        title: "Peran Diperbarui",
+        text: `Peran pengguna diubah menjadi ${newRole}`,
         confirmButtonColor: "#F15A24",
       });
     } catch (error) {
       console.error(error);
       Swal.fire({
         icon: "error",
-        title: "Update Failed",
-        text: "Failed to change user role",
+        title: "Gagal Memperbarui",
+        text: "Gagal mengubah peran pengguna",
         confirmButtonColor: "#F15A24",
       });
     }
