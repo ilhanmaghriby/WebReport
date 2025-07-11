@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import ReportCard from "./Card";
+import Background from "../assets/background.jpeg";
 
 interface ReportData {
   _id: string;
@@ -55,14 +56,18 @@ const Home: React.FC = () => {
 
   return (
     <main className="flex-grow">
-      {/* Hero Section - Full Screen */}
-      <section className="min-h-screen flex items-center justify-center text-gray-600 body-font relative">
+      <section
+        className="min-h-screen flex items-center justify-center text-white relative"
+        style={{
+          background: "linear-gradient(to bottom, #ffe0b2, #ffffff)",
+        }}
+      >
         <div className="container mx-auto flex px-5 py-24 items-center justify-center flex-col">
           <div className="text-center lg:w-2/3 w-full">
-            <h1 className="title-font sm:text-4xl text-3xl mb-4 font-medium text-gray-900">
+            <h1 className="title-font sm:text-4xl text-3xl mb-4 font-bold text-gray-900">
               Microdosing synth tattooed vexillologist
             </h1>
-            <p className="mb-8 leading-relaxed">
+            <p className="mb-8 leading-relaxed text-gray-800">
               Meggings kinfolk echo park stumptown DIY, kale chips beard
               jianbing tousled. Chambray dreamcatcher trust fund, kitsch vice
               godard disrupt ramps hexagon mustache umami snackwave tilde
@@ -79,7 +84,7 @@ const Home: React.FC = () => {
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-10 w-10 text-gray-500 hover:text-gray-700 transition-colors"
+            className="h-10 w-10 text-gray-600 hover:text-gray-800 transition-colors"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -110,7 +115,7 @@ const Home: React.FC = () => {
             Belum ada data yang masuk atau diverifikasi
           </div>
         ) : (
-          <div className="max-w-7xl mx-auto grid grid-cols-1 gap-6">
+          <div className="max-w-7xl mx-auto grid grid-cols-2 gap-6">
             {reportData.map((report) => (
               <ReportCard
                 key={report._id}
