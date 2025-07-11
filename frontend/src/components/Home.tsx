@@ -48,9 +48,54 @@ const Home: React.FC = () => {
     fetchData();
   }, []);
 
+  const scrollToContent = () => {
+    const contentSection = document.querySelector(".content-section");
+    contentSection?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
-    <main className="flex-grow mt-16">
-      <div className="mx-auto p-8">
+    <main className="flex-grow">
+      {/* Hero Section - Full Screen */}
+      <section className="min-h-screen flex items-center justify-center text-gray-600 body-font relative">
+        <div className="container mx-auto flex px-5 py-24 items-center justify-center flex-col">
+          <div className="text-center lg:w-2/3 w-full">
+            <h1 className="title-font sm:text-4xl text-3xl mb-4 font-medium text-gray-900">
+              Microdosing synth tattooed vexillologist
+            </h1>
+            <p className="mb-8 leading-relaxed">
+              Meggings kinfolk echo park stumptown DIY, kale chips beard
+              jianbing tousled. Chambray dreamcatcher trust fund, kitsch vice
+              godard disrupt ramps hexagon mustache umami snackwave tilde
+              chillwave ugh. Pour-over meditation PBR&amp;B pickled ennui celiac
+              mlkshk freegan photo booth af fingerstache pitchfork.
+            </p>
+          </div>
+        </div>
+
+        {/* Scroll Down Arrow */}
+        <div
+          className="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce cursor-pointer"
+          onClick={scrollToContent}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-10 w-10 text-gray-500 hover:text-gray-700 transition-colors"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 14l-7 7m0 0l-7-7m7 7V3"
+            />
+          </svg>
+        </div>
+      </section>
+
+      {/* Content Section */}
+      <div className="content-section mx-auto p-8">
         {isLoading ? (
           <div className="flex justify-center items-center mt-20">
             <div
