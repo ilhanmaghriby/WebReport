@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import ReportCard from "./Card";
-import Background from "../assets/background.jpeg";
 
 interface ReportData {
   _id: string;
@@ -49,11 +48,6 @@ const Home: React.FC = () => {
     fetchData();
   }, []);
 
-  const scrollToContent = () => {
-    const contentSection = document.querySelector(".content-section");
-    contentSection?.scrollIntoView({ behavior: "smooth" });
-  };
-
   return (
     <main className="flex-grow">
       <section
@@ -78,10 +72,7 @@ const Home: React.FC = () => {
         </div>
 
         {/* Scroll Down Arrow */}
-        <div
-          className="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce cursor-pointer"
-          onClick={scrollToContent}
-        >
+        <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce cursor-pointer">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-10 w-10 text-gray-600 hover:text-gray-800 transition-colors"
