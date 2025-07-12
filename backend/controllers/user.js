@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const bcrypt = require("bcryptjs");
 
 // Get all users
 exports.getAllUsers = async (req, res) => {
@@ -10,6 +11,47 @@ exports.getAllUsers = async (req, res) => {
     res
       .status(500)
       .json({ message: "Failed to fetch users", error: err.message });
+  }
+};
+
+// Create new user (admin only)
+exports.createUser = async (req, res) => {
+  const { username, password, role } = req.body;
+
+  if (!username || !password || !role) {
+    return res
+      .status(400)
+      .json({ message: "Username, password and role are required" });
+  }
+
+  try {
+    // Check if user exists
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ message: "Username already exists" });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = new User({
+      username,
+      password: hashedPassword,
+      role,
+    });
+
+    await newUser.save();
+
+    // Return user without password
+    const userResponse = newUser.toObject();
+    delete userResponse.password;
+
+    res.status(201).json(userResponse);
+  } catch (err) {
+    console.error("Failed to create user:", err);
+    res
+      .status(500)
+      .json({ message: "Failed to create user", error: err.message });
   }
 };
 
@@ -25,13 +67,20 @@ exports.updatePassword = async (req, res) => {
   }
 
   try {
-    const user = await User.findByIdAndUpdate(id, { password }, { new: true });
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await User.findByIdAndUpdate(
+      id,
+      { password: hashedPassword },
+      { new: true }
+    ).select("-password"); // Exclude password from response
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.json({ message: "Password updated successfully" });
+    res.json({ message: "Password updated successfully", user });
   } catch (err) {
     console.error("Failed to update password:", err);
     res.status(500).json({ message: "Update failed", error: err.message });
@@ -48,7 +97,11 @@ exports.updateRole = async (req, res) => {
   }
 
   try {
-    const user = await User.findByIdAndUpdate(id, { role }, { new: true });
+    const user = await User.findByIdAndUpdate(
+      id,
+      { role },
+      { new: true }
+    ).select("-password");
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -64,6 +117,11 @@ exports.updateRole = async (req, res) => {
 // Delete user
 exports.deleteUser = async (req, res) => {
   try {
+    // Prevent deleting yourself
+    if (req.user.id === req.params.id) {
+      return res.status(400).json({ message: "You cannot delete yourself" });
+    }
+
     const user = await User.findByIdAndDelete(req.params.id);
 
     if (!user) {

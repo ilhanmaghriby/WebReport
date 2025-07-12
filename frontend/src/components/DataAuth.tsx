@@ -54,6 +54,72 @@ export default function DataAuth() {
     fetchUsers();
   }, []);
 
+  const handleAddUser = async () => {
+    const { value: formValues } = await Swal.fire({
+      title: "Tambah Pengguna Baru",
+      html:
+        `<input id="swal-username" class="swal2-input" placeholder="Username">` +
+        `<input id="swal-password" type="password" class="swal2-input" placeholder="Password">` +
+        `<select id="swal-role" class="swal2-select">
+        <option value="user">Pengguna</option>
+        <option value="admin">Admin</option>
+      </select>`,
+      focusConfirm: false,
+      preConfirm: () => {
+        const username = (
+          document.getElementById("swal-username") as HTMLInputElement
+        ).value;
+        const password = (
+          document.getElementById("swal-password") as HTMLInputElement
+        ).value;
+        const role = (document.getElementById("swal-role") as HTMLSelectElement)
+          .value;
+
+        if (!username || !password) {
+          Swal.showValidationMessage("Semua field harus diisi!");
+          return;
+        }
+
+        return { username, password, role };
+      },
+      showCancelButton: true,
+      confirmButtonText: "Simpan",
+      cancelButtonText: "Batal",
+      confirmButtonColor: "#F15A24",
+      cancelButtonColor: "#6B7280",
+    });
+
+    if (formValues) {
+      try {
+        const res = await fetch("http://localhost:3000/auth/register", {
+          method: "POST",
+          headers: getTokenHeader(),
+          body: JSON.stringify(formValues),
+        });
+
+        if (!res.ok) throw new Error("Gagal menambahkan pengguna");
+
+        const newUser = await res.json();
+        setUsers((prev) => [...prev, newUser]);
+
+        Swal.fire({
+          icon: "success",
+          title: "Berhasil",
+          text: "Pengguna berhasil ditambahkan",
+          confirmButtonColor: "#F15A24",
+        });
+      } catch (error) {
+        console.error(error);
+        Swal.fire({
+          icon: "error",
+          title: "Gagal",
+          text: "Tidak dapat menambahkan pengguna baru",
+          confirmButtonColor: "#F15A24",
+        });
+      }
+    }
+  };
+
   const filteredUsers = users.filter(
     (user) =>
       user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -232,6 +298,26 @@ export default function DataAuth() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+          <button
+            onClick={handleAddUser}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium border border-transparent text-white bg-[#F15A24] hover:bg-orange-700 transition-colors shadow-sm"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+              />
+            </svg>
+            Tambah Pengguna
+          </button>
           <Link
             to="/"
             className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
