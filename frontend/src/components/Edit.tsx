@@ -263,6 +263,22 @@ export default function Edit() {
     }
   }, [data.sarana, currentPrasarana.prasarana]);
 
+  // Sinkronisasi totalKerusakanDanKerugian saat user mengetik
+  useEffect(() => {
+    const total =
+      currentPrasarana.perkiraanKerusakan + currentPrasarana.perkiraanKerugian;
+
+    setCurrentPrasarana((prev) => ({
+      ...prev,
+      totalKerusakanDanKerugian: total,
+    }));
+
+    setFormattedValues((prev) => ({
+      ...prev,
+      totalKerusakanDanKerugian: formatRupiah(String(total)),
+    }));
+  }, [currentPrasarana.perkiraanKerusakan, currentPrasarana.perkiraanKerugian]);
+
   const getSaranaOptions = (): string[] => {
     if (data.sektor === "PERMUKIMAN" && data.subsektor === "Perumahan") {
       return ["Perumahan"];
@@ -292,26 +308,42 @@ export default function Edit() {
   };
 
   const formatRupiah = (value: string): string => {
+    if (!value) return "Rp 0";
     const numberString = value.replace(/[^,\d]/g, "");
     const split = numberString.split(",");
     let sisa = split[0].length % 3;
     let rupiah = split[0].substr(0, sisa);
     const ribuan = split[0].substr(sisa).match(/\d{3}/g);
-
-    if (ribuan) {
-      rupiah += (sisa ? "." : "") + ribuan.join(".");
-    }
-
+    if (ribuan) rupiah += (sisa ? "." : "") + ribuan.join(".");
     return split[1] !== undefined ? `Rp ${rupiah},${split[1]}` : `Rp ${rupiah}`;
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    let prasaranaItems = [...data.prasaranaItems];
+    const isEmpty =
+      !data.title ||
+      !data.sektor ||
+      !data.subsektor ||
+      !data.sarana ||
+      data.prasaranaItems.length === 0;
 
-    // Tambahkan currentPrasarana terakhir (jika belum ditambahkan)
-    if (currentPrasarana.prasarana) {
+    if (isEmpty) {
+      Swal.fire(
+        "Gagal",
+        "Semua field wajib diisi dan minimal 1 prasarana ditambahkan.",
+        "error"
+      );
+      return;
+    }
+
+    const prasaranaItems = [...data.prasaranaItems];
+
+    // Tambahkan currentPrasarana jika belum kosong dan belum ditambahkan
+    if (
+      currentPrasarana.prasarana &&
+      !prasaranaItems.includes(currentPrasarana)
+    ) {
       const total =
         currentPrasarana.perkiraanKerusakan +
         currentPrasarana.perkiraanKerugian;
@@ -328,17 +360,15 @@ export default function Edit() {
     formData.append("sarana", data.sarana);
     formData.append("keterangan", data.keterangan);
 
-    // Kirim data prasarana (tanpa gambar) sebagai JSON
     const itemsWithoutImages = prasaranaItems.map((item, index) => {
       return {
         ...item,
-        images: item.images.map((_, i) => `prasarana_${index}_img_${i}`), // placeholder nama gambar
+        images: item.images.map((_, i) => `prasarana_${index}_img_${i}`),
       };
     });
 
     formData.append("prasaranaItems", JSON.stringify(itemsWithoutImages));
 
-    // Tambahkan file gambar-gambar ke FormData
     prasaranaItems.forEach((item, index) => {
       item.images.forEach((img, i) => {
         formData.append(`prasarana_${index}_img_${i}`, img);
@@ -356,25 +386,12 @@ export default function Edit() {
 
       if (!res.ok) throw new Error("Gagal mengupdate data");
 
-      const result = await res.json();
-      console.log("Sukses:", result);
-
-      Swal.fire({
-        title: "Berhasil!",
-        text: "Data berhasil diupdate.",
-        icon: "success",
-        confirmButtonText: "OK",
-      }).then(() => {
-        navigate("/dashboard");
-      });
+      Swal.fire("Berhasil!", "Data berhasil diupdate.", "success").then(() =>
+        navigate("/dashboard")
+      );
     } catch (err) {
       console.error("Error:", err);
-      Swal.fire({
-        title: "Gagal!",
-        text: "Gagal mengupdate data.",
-        icon: "error",
-        confirmButtonText: "OK",
-      });
+      Swal.fire("Gagal!", "Gagal mengupdate data.", "error");
     }
   };
 
