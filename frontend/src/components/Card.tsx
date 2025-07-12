@@ -138,21 +138,27 @@ const ReportCard: React.FC<ReportCardProps> = ({
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
                 Sektor
               </p>
-              <p className="text-gray-800 font-medium truncate">{sektor}</p>
+              <p className="text-gray-800 font-medium truncate text-sm">
+                {sektor}
+              </p>
             </div>
 
             <div className="bg-gray-50 p-3 rounded-lg">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
                 Sub Sektor
               </p>
-              <p className="text-gray-800 font-medium truncate">{subsektor}</p>
+              <p className="text-gray-800 font-medium truncate text-sm">
+                {subsektor}
+              </p>
             </div>
 
             <div className="bg-gray-50 p-3 rounded-lg col-span-2">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
                 Diupload Oleh
               </p>
-              <p className="text-gray-800 font-medium truncate">{uploadedBy}</p>
+              <p className="text-gray-800 font-medium truncate text-sm">
+                {uploadedBy}
+              </p>
             </div>
           </div>
         </div>
