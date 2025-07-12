@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import SOP from "../assets/SOP.webp";
 
 interface Report {
   _id: string;
@@ -59,12 +60,11 @@ export default function Dashboard() {
       html: `
         <div class="text-center">
           <img 
-            src="/path-to-your-flow-image.png" 
+            src="${SOP}" 
             alt="Alur Pemakaian Dashboard" 
             class="mx-auto mb-4 max-w-full h-auto"
             style="max-height: 400px;"
           />
-          <p class="text-gray-600">Berikut adalah alur penggunaan dashboard laporan</p>
         </div>
       `,
       showConfirmButton: true,
@@ -94,11 +94,11 @@ export default function Dashboard() {
             Pantau status laporan yang telah Anda kirim
           </p>
         </div>
-        <div className="flex gap-3 w-full md:w-auto">
+        <div className="flex flex-col justify-end md:flex-row gap-3 w-full">
           {showFlowButton && (
             <button
               onClick={showUsageFlow}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium bg-[#1E3A8A] hover:bg-[#1E40AF] text-white transition-all shadow-sm hover:shadow-md w-full justify-center md:w-auto"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium bg-[#1E3A8A] hover:bg-[#1E40AF] text-white transition-all shadow-sm hover:shadow-md"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -117,8 +117,9 @@ export default function Dashboard() {
               SOP
             </button>
           )}
+
           <Link to="/upload" className="w-full md:w-auto">
-            <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium bg-[#F15A24] text-white hover:bg-orange-600 transition-all shadow-sm hover:shadow-md w-full justify-center">
+            <button className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium bg-[#F15A24] hover:bg-orange-600 text-white transition-all shadow-sm hover:shadow-md w-full">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5"
@@ -136,8 +137,9 @@ export default function Dashboard() {
               Tambah Laporan Baru
             </button>
           </Link>
+
           <Link to="/" className="w-full md:w-auto">
-            <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 transition-all w-full justify-center">
+            <button className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 transition-all w-full">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5"
