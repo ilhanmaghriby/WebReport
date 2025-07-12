@@ -626,11 +626,13 @@ export default function Upload() {
                     >
                       <option value="">-- Pilih Prasarana --</option>
                       {data.sarana === "Transportasi Darat"
-                        ? dataJalan.map((item) => (
-                            <option key={item.kode} value={item.judul}>
-                              {item.judul}
-                            </option>
-                          ))
+                        ? [...dataJalan] // Buat salinan array
+                            .sort((a, b) => a.judul.localeCompare(b.judul)) // Urutkan berdasarkan judul A-Z
+                            .map((item) => (
+                              <option key={item.kode} value={item.judul}>
+                                {item.judul}
+                              </option>
+                            ))
                         : getPrasaranaOptions().map((option) => (
                             <option key={option} value={option}>
                               {option}
@@ -675,11 +677,14 @@ export default function Upload() {
                               (item) =>
                                 item.judul === currentPrasarana.prasarana
                             )?.lokasiBarang || []
-                          ).map((lokasiBarang, idx) => (
-                            <option key={idx} value={lokasiBarang}>
-                              {lokasiBarang}
-                            </option>
-                          ))}
+                          )
+                            .slice() // Buat salinan array untuk menghindari mutasi langsung
+                            .sort((a, b) => a.localeCompare(b)) // Urutkan secara A-Z
+                            .map((lokasiBarang, idx) => (
+                              <option key={idx} value={lokasiBarang}>
+                                {lokasiBarang}
+                              </option>
+                            ))}
                         </select>
                       </div>
                     </div>

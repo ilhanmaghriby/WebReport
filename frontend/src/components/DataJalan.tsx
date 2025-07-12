@@ -17,7 +17,7 @@ export const dataJalan = [
     lokasiBarang: ["Pusat Perkantoran Cot Trieng"],
   },
   {
-    judul: "Lain-lain (Jalan Banda Aceh Medan Mns. Bie Meurah Dua)",
+    judul: "Lain-lain (1.3.4.01.01.02.006)",
     kode: "1.3.4.01.01.02.006",
     lokasiBarang: ["Jalan Banda Aceh Medan Mns. Bie Meurah Dua"],
   },
@@ -2145,7 +2145,7 @@ export const dataJalan = [
     ],
   },
   {
-    judul: "Lain-lain",
+    judul: "Lain-lain (1.3.4.01.01.05.005)",
     kode: "1.3.4.01.01.05.005",
     lokasiBarang: [
       "Alue Cubok-Gp. Kayee Jatoe",
@@ -2548,7 +2548,7 @@ export const dataJalan = [
     ],
   },
   {
-    judul: "Lain-lain",
+    judul: "Lain-lain (1.3.4.01.02.08.004)",
     kode: "1.3.4.01.02.08.004",
     lokasiBarang: [
       "Kuta Krueng Bandar Dua",
@@ -2640,7 +2640,7 @@ export const dataJalan = [
     ],
   },
   {
-    judul: "Lain-lain",
+    judul: "Lain-lain (1.3.4.02.01.01.006)",
     kode: "1.3.4.02.01.01.006",
     lokasiBarang: [
       "Komplek Perkantoran Cot Trieng (Sekdakab)",
@@ -3630,7 +3630,7 @@ export const dataJalan = [
     ],
   },
   {
-    judul: "Lain-lain",
+    judul: "Lain-lain (1.3.4.02.01.03.008)",
     kode: "1.3.4.02.01.03.008",
     lokasiBarang: [
       "Komplek Kantor Bupati Pidie Jaya",
@@ -3934,7 +3934,7 @@ export const dataJalan = [
     ],
   },
   {
-    judul: "Lain-lain",
+    judul: "Lain-lain (1.3.4.02.03.01.002)",
     kode: "1.3.4.02.03.01.002",
     lokasiBarang: [
       "Meurandeh Alue- Asan Kumbang - Blang Miroe",
@@ -4284,7 +4284,7 @@ export const dataJalan = [
     ],
   },
   {
-    judul: "Lain-lain",
+    judul: "Lain-lain (1.3.4.02.04.05.014)",
     kode: "1.3.4.02.04.05.014",
     lokasiBarang: [
       "Beracan Kec. Meureudu",
@@ -4395,7 +4395,7 @@ export const dataJalan = [
     ],
   },
   {
-    judul: "Lain-lain",
+    judul: "Lain-lain (1.3.4.02.05.04.002)",
     kode: "1.3.4.02.05.04.002",
     lokasiBarang: [
       "GAHARU",
@@ -4595,7 +4595,7 @@ export const dataJalan = [
     ],
   },
   {
-    judul: "Lain-lain",
+    judul: "Lain-lain (1.3.4.02.06.02.008)",
     kode: "1.3.4.02.06.02.008",
     lokasiBarang: [
       "Pipa Tersier Meuko Rayek",
@@ -4696,7 +4696,7 @@ export const dataJalan = [
     ],
   },
   {
-    judul: "Lain-lain",
+    judul: "Lain-lain (1.3.4.02.07.03.005)",
     kode: "1.3.4.02.07.03.005",
     lokasiBarang: [
       "Desa Lampoih Lada Kec. Meureudu",
@@ -4875,7 +4875,7 @@ export const dataJalan = [
     ],
   },
   {
-    judul: "Lain-lain",
+    judul: "Lain-lain (1.3.4.03.02.02.004)",
     kode: "1.3.4.03.02.02.004",
     lokasiBarang: ["RSUD Pidie Jaya"],
   },
@@ -4885,7 +4885,7 @@ export const dataJalan = [
     lokasiBarang: ["Dalam Kabupaten Pidie Jaya"],
   },
   {
-    judul: "Lain-lain",
+    judul: "Lain-lain (1.3.4.03.05.01.004)",
     kode: "1.3.4.03.05.01.004",
     lokasiBarang: [
       "Komplek Perkantoran Cot Trieng (Dinas Penanaman Mo",
@@ -4930,7 +4930,7 @@ export const dataJalan = [
     ],
   },
   {
-    judul: "Lain-lain",
+    judul: "Lain-lain (1.3.4.03.06.02.004)",
     kode: "1.3.4.03.06.02.004",
     lokasiBarang: ["Kantor Bupati Pidie Jaya"],
   },
@@ -5026,7 +5026,7 @@ export const dataJalan = [
     ],
   },
   {
-    judul: "Lain-lain",
+    judul: "Lain-lain (1.3.4.04.01.04.004)",
     kode: "1.3.4.04.01.04.004",
     lokasiBarang: ["Sumur Bor Gp. Cut Njong"],
   },
@@ -5101,7 +5101,7 @@ export const dataJalan = [
     ],
   },
   {
-    judul: "Lain-lain",
+    judul: "Lain-lain (1.3.4.04.02.02.005)",
     kode: "1.3.4.04.02.02.005",
     lokasiBarang: ["Komplek Perkantoran Cot Trieng (Sekretariat DPRK)"],
   },
@@ -5194,7 +5194,7 @@ export const dataJalan = [
     ],
   },
   {
-    judul: "Lain-lain",
+    judul: "Lain-lain (1.3.4.04.03.01.005)",
     kode: "1.3.4.04.03.01.005",
     lokasiBarang: [
       "Gampong Paya (PKM Trienggadeng)",
