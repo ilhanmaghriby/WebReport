@@ -129,7 +129,6 @@ export default function Admin() {
   const [dropdownIdx, setDropdownIdx] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -544,13 +543,7 @@ export default function Admin() {
                             onClick={(e) => {
                               e.stopPropagation();
                               e.preventDefault();
-                              const rect =
-                                e.currentTarget.getBoundingClientRect();
                               setDropdownIdx(idx === dropdownIdx ? null : idx);
-                              setDropdownPosition({
-                                top: rect.bottom + window.scrollY,
-                                left: rect.right - 224,
-                              });
                             }}
                           >
                             <svg
@@ -570,13 +563,7 @@ export default function Admin() {
                           </button>
 
                           {dropdownIdx === idx && (
-                            <div
-                              className="origin-top-right fixed mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50"
-                              style={{
-                                top: `${dropdownPosition.top}px`,
-                                left: `${dropdownPosition.left}px`,
-                              }}
-                            >
+                            <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
                               <div
                                 className="py-1"
                                 role="menu"
