@@ -169,6 +169,21 @@ export default function Upload() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
+    if (
+      !data.title ||
+      !data.sektor ||
+      !data.subsektor ||
+      !data.sarana ||
+      data.prasaranaItems.length === 0
+    ) {
+      Swal.fire({
+        icon: "warning",
+        title: "Lengkapi Semua Data",
+        text: "Harap isi semua bagian form dan tambahkan minimal satu prasarana.",
+      });
+      return;
+    }
+
     let prasaranaItems = [...data.prasaranaItems];
 
     // Tambahkan currentPrasarana terakhir (jika belum ditambahkan)
@@ -321,27 +336,26 @@ export default function Upload() {
     setData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const filesArray = Array.from(e.target.files);
-      const maxSize = 1 * 1024 * 1024; // 1 MB
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
 
-      const oversized = filesArray.find((file) => file.size > maxSize);
-      if (oversized) {
-        Swal.fire({
-          title: "Ukuran Terlalu Besar",
-          text: `File "${oversized.name}" melebihi batas 1 MB.`,
-          icon: "warning",
-          confirmButtonText: "OK",
-        });
-        return;
-      }
+    const validFiles = Array.from(files).filter(
+      (file) => file.size <= 1024 * 1024
+    );
 
-      setCurrentPrasarana((prev) => ({
-        ...prev,
-        images: [...prev.images, ...filesArray],
-      }));
+    if (validFiles.length !== files.length) {
+      Swal.fire({
+        icon: "error",
+        title: "Ukuran gambar terlalu besar",
+        text: "Beberapa gambar melebihi batas 1MB dan tidak diunggah.",
+      });
     }
+
+    setCurrentPrasarana((prev) => ({
+      ...prev,
+      images: [...prev.images, ...validFiles],
+    }));
   };
 
   const subsektorOptions: Record<string, string[]> = {
@@ -408,6 +422,17 @@ export default function Upload() {
 
     return split[1] !== undefined ? `Rp ${rupiah},${split[1]}` : `Rp ${rupiah}`;
   };
+
+  useEffect(() => {
+    const total =
+      (currentPrasarana.perkiraanKerusakan || 0) +
+      (currentPrasarana.perkiraanKerugian || 0);
+
+    setCurrentPrasarana((prev) => ({
+      ...prev,
+      totalKerusakanDanKerugian: total,
+    }));
+  }, [currentPrasarana.perkiraanKerusakan, currentPrasarana.perkiraanKerugian]);
 
   return (
     <form
@@ -672,19 +697,22 @@ export default function Upload() {
                           className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                         >
                           <option value="">-- Pilih Lokasi --</option>
-                          {(
-                            dataJalan.find(
-                              (item) =>
-                                item.judul === currentPrasarana.prasarana
-                            )?.lokasiBarang || []
-                          )
-                            .slice() // Buat salinan array untuk menghindari mutasi langsung
-                            .sort((a, b) => a.localeCompare(b)) // Urutkan secara A-Z
-                            .map((lokasiBarang, idx) => (
-                              <option key={idx} value={lokasiBarang}>
-                                {lokasiBarang}
-                              </option>
-                            ))}
+                          {(() => {
+                            const lokasiList =
+                              dataJalan.find(
+                                (item) =>
+                                  item.judul === currentPrasarana.prasarana
+                              )?.lokasiBarang || [];
+
+                            return lokasiList
+                              .slice()
+                              .sort((a, b) => a.localeCompare(b))
+                              .map((lokasiBarang, idx) => (
+                                <option key={idx} value={lokasiBarang}>
+                                  {lokasiBarang}
+                                </option>
+                              ));
+                          })()}
                         </select>
                       </div>
                     </div>
