@@ -38,9 +38,9 @@ export async function exportToExcel(dataArray: any[], title: string) {
     "Satuan",
     "Luas / Jumlah Rata2",
     "Harga Satuan (Rp)",
-    "Nilai Kerusakan Berat",
-    "Nilai Kerusakan Sedang",
-    "Nilai Kerusakan Ringan",
+    "Berat",
+    "Sedang",
+    "Ringan",
     "Perkiraan Kerusakan (Rp)",
     "Prakiraan Kerugian (Rp)",
     "Total Kerusakan dan Kerugian (Rp)",
@@ -195,15 +195,15 @@ export async function exportToExcel(dataArray: any[], title: string) {
         "", // Empty for sektor/subsektor
         prasaranaItem.prasarana || "",
         prasaranaItem.lokasi || "",
-        prasaranaItem.kerusakan?.berat ? "✓" : "-",
-        prasaranaItem.kerusakan?.sedang ? "✓" : "-",
-        prasaranaItem.kerusakan?.ringan ? "✓" : "-",
+        prasaranaItem.dataKerusakan?.berat || "",
+        prasaranaItem.dataKerusakan?.sedang || "",
+        prasaranaItem.dataKerusakan?.ringan || "",
         prasaranaItem.satuan || "-",
         prasaranaItem.luasRataRata || "-",
         toNumber(prasaranaItem.hargaSatuan) || "-",
-        prasaranaItem.nilaiKerusakanKategori?.berat || "-",
-        prasaranaItem.nilaiKerusakanKategori?.sedang || "-",
-        prasaranaItem.nilaiKerusakanKategori?.ringan || "-",
+        prasaranaItem.nilaiKerusakanKategori?.berat || "",
+        prasaranaItem.nilaiKerusakanKategori?.sedang || "",
+        prasaranaItem.nilaiKerusakanKategori?.ringan || "",
         prasaranaItem.perkiraanKerusakan || "-",
         prasaranaItem.perkiraanKerugian || "-",
         prasaranaItem.totalKerusakanDanKerugian || "-",
@@ -217,7 +217,7 @@ export async function exportToExcel(dataArray: any[], title: string) {
       // Format numbers and alignment
       row.eachCell((cell, colNumber) => {
         // Format numeric columns
-        if ([8, 9, 10, 11, 12, 13, 14, 15].includes(colNumber)) {
+        if ([4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15].includes(colNumber)) {
           if (typeof cell.value === "number") {
             cell.numFmt = "#,##0";
           }
@@ -226,7 +226,7 @@ export async function exportToExcel(dataArray: any[], title: string) {
         // Set alignment
         if ([1, 2, 3, 17].includes(colNumber)) {
           cell.alignment = { vertical: "middle", horizontal: "left" };
-        } else if (colNumber >= 8 && colNumber <= 15) {
+        } else if (colNumber >= 4 && colNumber <= 15) {
           cell.alignment = { vertical: "middle", horizontal: "right" };
         } else {
           cell.alignment = { vertical: "middle", horizontal: "center" };

@@ -10,8 +10,6 @@ interface PrasaranaItem {
   lokasi: string;
   latitude: number;
   longitude: number;
-  nilaiKerusakan: number;
-  nilaiKerugian: number;
   totalKerusakanDanKerugian: number;
   kerusakan: {
     berat: boolean;
@@ -19,6 +17,11 @@ interface PrasaranaItem {
     ringan: boolean;
   };
   tingkatKerusakan: string;
+  dataKerusakan: {
+    berat: 0;
+    sedang: 0;
+    ringan: 0;
+  };
   nilaiKerusakanKategori: {
     berat: number;
     sedang: number;
@@ -49,8 +52,6 @@ export default function Upload() {
     lokasi: "",
     latitude: 0,
     longitude: 0,
-    nilaiKerusakan: 0,
-    nilaiKerugian: 0,
     totalKerusakanDanKerugian: 0,
     kerusakan: {
       berat: false,
@@ -58,6 +59,11 @@ export default function Upload() {
       ringan: false,
     },
     tingkatKerusakan: "",
+    dataKerusakan: {
+      berat: 0,
+      sedang: 0,
+      ringan: 0,
+    },
     nilaiKerusakanKategori: {
       berat: 0,
       sedang: 0,
@@ -73,6 +79,9 @@ export default function Upload() {
   });
 
   const [formattedValues, setFormattedValues] = useState({
+    dataBerat: "",
+    dataSedang: "",
+    dataRingan: "",
     nilaiBerat: "",
     nilaiSedang: "",
     nilaiRingan: "",
@@ -106,8 +115,6 @@ export default function Upload() {
       lokasi: "",
       latitude: 0,
       longitude: 0,
-      nilaiKerusakan: 0,
-      nilaiKerugian: 0,
       totalKerusakanDanKerugian: 0,
       kerusakan: {
         berat: false,
@@ -115,6 +122,11 @@ export default function Upload() {
         ringan: false,
       },
       tingkatKerusakan: "",
+      dataKerusakan: {
+        berat: 0,
+        sedang: 0,
+        ringan: 0,
+      },
       nilaiKerusakanKategori: {
         berat: 0,
         sedang: 0,
@@ -131,6 +143,9 @@ export default function Upload() {
 
     // Also reset formatted values
     setFormattedValues({
+      dataBerat: "",
+      dataSedang: "",
+      dataRingan: "",
       nilaiBerat: "",
       nilaiSedang: "",
       nilaiRingan: "",
@@ -299,6 +314,19 @@ export default function Upload() {
       setFormattedValues((prev) => ({
         ...prev,
         [name]: formatRupiah(value),
+      }));
+      return;
+    }
+
+    // Handle data kerusakan for currentPrasarana
+    if (["dataBerat", "dataSedang", "dataRingan"].includes(name)) {
+      const numericValue = Number(value); // tidak pakai regex hapus Rp
+      setCurrentPrasarana((prev) => ({
+        ...prev,
+        dataKerusakan: {
+          ...prev.dataKerusakan,
+          [name.replace("data", "").toLowerCase()]: numericValue,
+        },
       }));
       return;
     }
@@ -503,8 +531,6 @@ export default function Upload() {
                     lokasi: "",
                     latitude: 0,
                     longitude: 0,
-                    nilaiKerusakan: 0,
-                    nilaiKerugian: 0,
                     totalKerusakanDanKerugian: 0,
                     kerusakan: {
                       berat: false,
@@ -512,6 +538,11 @@ export default function Upload() {
                       ringan: false,
                     },
                     tingkatKerusakan: "",
+                    dataKerusakan: {
+                      berat: 0,
+                      sedang: 0,
+                      ringan: 0,
+                    },
                     nilaiKerusakanKategori: {
                       berat: 0,
                       sedang: 0,
@@ -564,8 +595,6 @@ export default function Upload() {
                     lokasi: "",
                     latitude: 0,
                     longitude: 0,
-                    nilaiKerusakan: 0,
-                    nilaiKerugian: 0,
                     totalKerusakanDanKerugian: 0,
                     kerusakan: {
                       berat: false,
@@ -573,6 +602,11 @@ export default function Upload() {
                       ringan: false,
                     },
                     tingkatKerusakan: "",
+                    dataKerusakan: {
+                      berat: 0,
+                      sedang: 0,
+                      ringan: 0,
+                    },
                     nilaiKerusakanKategori: {
                       berat: 0,
                       sedang: 0,
@@ -788,6 +822,32 @@ export default function Upload() {
                       onChange={handleChange}
                       placeholder="Contoh: meter, unit, dll"
                     />
+                    {currentPrasarana.tingkatKerusakan === "berat" && (
+                      <InputField
+                        label="Data Kerusakan Berat"
+                        name="dataBerat"
+                        value={currentPrasarana.dataKerusakan.berat}
+                        onChange={handleChange}
+                      />
+                    )}
+
+                    {currentPrasarana.tingkatKerusakan === "sedang" && (
+                      <InputField
+                        label="Data Kerusakan Sedang"
+                        name="dataSedang"
+                        value={currentPrasarana.dataKerusakan.sedang}
+                        onChange={handleChange}
+                      />
+                    )}
+
+                    {currentPrasarana.tingkatKerusakan === "ringan" && (
+                      <InputField
+                        label="Data Kerusakan Ringan"
+                        name="dataRingan"
+                        value={currentPrasarana.dataKerusakan.ringan}
+                        onChange={handleChange}
+                      />
+                    )}
 
                     {currentPrasarana.tingkatKerusakan === "berat" && (
                       <InputField

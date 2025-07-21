@@ -6,8 +6,6 @@ const PrasaranaItemSchema = new mongoose.Schema({
   lokasi: String,
   latitude: Number,
   longitude: Number,
-  nilaiKerusakan: Number,
-  nilaiKerugian: Number,
   totalKerusakanDanKerugian: Number,
   kerusakan: {
     berat: { type: Boolean, default: false },
@@ -15,6 +13,11 @@ const PrasaranaItemSchema = new mongoose.Schema({
     ringan: { type: Boolean, default: false },
   },
   tingkatKerusakan: String,
+  dataKerusakan: {
+    berat: { type: Number, default: 0 },
+    sedang: { type: Number, default: 0 },
+    ringan: { type: Number, default: 0 },
+  },
   nilaiKerusakanKategori: {
     berat: { type: Number, default: 0 },
     sedang: { type: Number, default: 0 },
