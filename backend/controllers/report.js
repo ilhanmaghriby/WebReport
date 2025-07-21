@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const Report = require("../models/Report");
 const slugify = require("slugify");
 
-// Helper function to delete files
+// Helper: hapus files
 const deleteFiles = (filePaths) => {
   filePaths.forEach((filePath) => {
     const fullPath = path.join(__dirname, "../", filePath);
@@ -107,6 +107,7 @@ exports.createReport = async (req, res) => {
 };
 
 // Update report
+// Update report
 exports.updateReport = async (req, res) => {
   const { id } = req.params;
   const token = req.headers.authorization?.split(" ")[1];
@@ -125,7 +126,16 @@ exports.updateReport = async (req, res) => {
       return res.status(404).json({ message: "Report tidak ditemukan" });
     }
 
-    // Identify deleted prasarana items and their images
+    // Improved normalizePath function with type checking
+    const normalizePath = (filePath) => {
+      if (typeof filePath !== "string") {
+        console.warn("Non-string file path:", filePath);
+        return "";
+      }
+      return filePath.replace(/\\/g, "/").trim();
+    };
+
+    // Delete completely removed prasarana items
     const deletedItems = oldReport.prasaranaItems.filter(
       (oldItem) =>
         !parsedItems.some(
@@ -133,59 +143,140 @@ exports.updateReport = async (req, res) => {
         )
     );
 
-    // Delete images from deleted items
-    const imagesToDelete = deletedItems.flatMap((item) => item.images || []);
-    deleteFiles(imagesToDelete);
+    // Safely get images to delete with null checks
+    const imagesToDelete = deletedItems.flatMap((item) =>
+      Array.isArray(item.images)
+        ? item.images.map((img) => normalizePath(img)).filter(Boolean)
+        : []
+    );
 
-    // Process new files for each prasarana item
-    parsedItems.forEach((item, idx) => {
+    if (imagesToDelete.length > 0) {
+      deleteFiles(imagesToDelete);
+    }
+
+    // Process each prasarana item
+    for (const [idx, item] of parsedItems.entries()) {
+      const safeLokasi = slugify(item.lokasi || `lokasi-${idx}`, {
+        lower: true,
+        strict: true,
+      });
+
       if (!item._id) {
-        // New item - process all uploaded files
-        const safeLokasi = slugify(item.lokasi || `lokasi-${idx}`, {
-          lower: true,
-          strict: true,
-        });
+        // New item - process uploaded files
         item.images = files
-          .filter((file) => file.fieldname.startsWith(`prasarana_${idx}_img_`))
+          .filter(
+            (file) =>
+              file.fieldname &&
+              file.fieldname.startsWith(`prasarana_${idx}_img_`)
+          )
           .map((file, i) => {
             const ext = path.extname(file.originalname);
             const newFilename = `${safeLokasi}-${Date.now()}-${i + 1}${ext}`;
             const newPath = path.join("uploads", newFilename);
             fs.renameSync(file.path, newPath);
-            return newPath;
+            return normalizePath(newPath);
           });
       } else {
-        // Existing item - keep existing images and add new ones
+        // Existing item - process image updates
         const existingItem = oldReport.prasaranaItems.find(
-          (oldItem) => oldItem._id.toString() === item._id
+          (oldItem) => oldItem._id && oldItem._id.toString() === item._id
         );
 
         if (existingItem) {
-          // Keep existing images
-          item.images = existingItem.images || [];
+          const oldImages = (existingItem.images || [])
+            .map((img) => normalizePath(img))
+            .filter(Boolean);
 
-          // Add new images
+          const clientImages = (item.images || [])
+            .map((img) => normalizePath(img))
+            .filter(Boolean);
+
+          const lokasiLama = existingItem.lokasi || "";
+          const lokasiBaru = item.lokasi || "";
+
+          // Identify images to remove (present in old but not in client)
+          const removedImages = oldImages.filter(
+            (img) => !clientImages.includes(img)
+          );
+
+          if (removedImages.length > 0) {
+            deleteFiles(removedImages);
+          }
+
+          // Rename images if location changed
+          let keptImages = [];
+          if (lokasiLama !== lokasiBaru && oldImages.length > 0) {
+            keptImages = oldImages
+              .map((imgPath) => {
+                try {
+                  const ext = path.extname(imgPath);
+                  const baseName = path.basename(imgPath, ext);
+                  const newBaseName = baseName.replace(
+                    slugify(lokasiLama, { lower: true, strict: true }),
+                    slugify(lokasiBaru, { lower: true, strict: true })
+                  );
+                  const newImgPath = path.join(
+                    path.dirname(imgPath),
+                    newBaseName + ext
+                  );
+
+                  const oldFullPath = path.join(__dirname, "../", imgPath);
+                  const newFullPath = path.join(__dirname, "../", newImgPath);
+
+                  if (fs.existsSync(oldFullPath)) {
+                    fs.renameSync(oldFullPath, newFullPath);
+                    console.log(`[RENAME] ${oldFullPath} -> ${newFullPath}`);
+                    return normalizePath(newImgPath);
+                  }
+                  return imgPath;
+                } catch (err) {
+                  console.error("Gagal rename gambar:", imgPath, err);
+                  return imgPath;
+                }
+              })
+              .filter(
+                (img) => !removedImages.includes(normalizePath(img)) && img
+              );
+          } else {
+            // Keep only images that weren't removed
+            keptImages = oldImages.filter(
+              (img) => !removedImages.includes(normalizePath(img))
+            );
+          }
+
+          // Process new uploaded files
           const newImages = files
-            .filter((file) =>
-              file.fieldname.startsWith(`prasarana_${idx}_img_`)
+            .filter(
+              (file) =>
+                file.fieldname &&
+                file.fieldname.startsWith(`prasarana_${idx}_img_`)
             )
             .map((file, i) => {
-              const ext = path.extname(file.originalname);
-              const newFilename = `${slugify(item.lokasi || `lokasi-${idx}`, {
-                lower: true,
-                strict: true,
-              })}-${Date.now()}-${i + 1}${ext}`;
-              const newPath = path.join("uploads", newFilename);
-              fs.renameSync(file.path, newPath);
-              return newPath;
-            });
+              try {
+                const ext = path.extname(file.originalname);
+                const newFilename = `${safeLokasi}-${Date.now()}-${
+                  i + 1
+                }${ext}`;
+                const newPath = path.join("uploads", newFilename);
+                fs.renameSync(file.path, newPath);
+                return normalizePath(newPath);
+              } catch (err) {
+                console.error("Gagal memproses file baru:", err);
+                return null;
+              }
+            })
+            .filter(Boolean);
 
-          item.images = [...item.images, ...newImages];
+          // Combine kept and new images
+          item.images = [
+            ...keptImages.filter(Boolean),
+            ...newImages.filter(Boolean),
+          ];
         }
       }
-    });
+    }
 
-    // Update report
+    // Update main report data
     oldReport.title = title;
     oldReport.sektor = sektor;
     oldReport.subsektor = subsektor;
@@ -198,9 +289,11 @@ exports.updateReport = async (req, res) => {
     res.json({ message: "Report berhasil diperbarui", report: oldReport });
   } catch (err) {
     console.error("Error saat update report:", err);
-    res
-      .status(500)
-      .json({ message: "Gagal update report", error: err.message });
+    res.status(500).json({
+      message: "Gagal update report",
+      error: err.message,
+      stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+    });
   }
 };
 

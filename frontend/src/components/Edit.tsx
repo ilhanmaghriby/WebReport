@@ -31,7 +31,8 @@ interface PrasaranaItem {
   perkiraanKerusakan: number;
   perkiraanKerugian: number;
   keterangan: string;
-  images: File[];
+  images: (string | File)[];
+  _id?: string;
 }
 
 interface InputFieldProps {
@@ -57,6 +58,7 @@ export default function Edit() {
     keterangan: "",
   });
 
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [currentPrasarana, setCurrentPrasarana] = useState<PrasaranaItem>({
     prasarana: "",
     kodeBarang: "",
@@ -100,6 +102,14 @@ export default function Edit() {
     totalKerusakanDanKerugian: "",
   });
 
+  const [imagePreviews, setImagePreviews] = useState<
+    { file: File | string; url: string }[]
+  >([]);
+
+  const [showImagePreviews, setShowImagePreviews] = useState<
+    Record<number, boolean>
+  >({});
+
   const subsektorOptions: Record<string, string[]> = {
     PERMUKIMAN: ["Perumahan", "Pras Lingk"],
     INFRASTRUKTUR: [
@@ -131,19 +141,45 @@ export default function Edit() {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
+
+        if (!res.ok) throw new Error("Gagal mengambil data");
+
         const result = await res.json();
 
-        // Convert server data to match our PrasaranaItem interface
         const prasaranaItems = (result.prasaranaItems || []).map(
-          (item: any) => ({
-            ...item,
-            images: [], // Initialize empty array for new images
-            dataKerusakan: item.dataKerusakan || {
-              berat: 0,
-              sedang: 0,
-              ringan: 0,
-            },
-          })
+          (item: any) => {
+            // Konversi string ke number untuk semua field numerik
+            const convertToNumber = (value: any) =>
+              typeof value === "string" ? parseFloat(value) || 0 : value;
+
+            return {
+              ...item,
+              latitude: convertToNumber(item.latitude),
+              longitude: convertToNumber(item.longitude),
+              totalKerusakanDanKerugian: convertToNumber(
+                item.totalKerusakanDanKerugian
+              ),
+              dataKerusakan: {
+                berat: convertToNumber(item.dataKerusakan?.berat || 0),
+                sedang: convertToNumber(item.dataKerusakan?.sedang || 0),
+                ringan: convertToNumber(item.dataKerusakan?.ringan || 0),
+              },
+              nilaiKerusakanKategori: {
+                berat: convertToNumber(item.nilaiKerusakanKategori?.berat || 0),
+                sedang: convertToNumber(
+                  item.nilaiKerusakanKategori?.sedang || 0
+                ),
+                ringan: convertToNumber(
+                  item.nilaiKerusakanKategori?.ringan || 0
+                ),
+              },
+              luasRataRata: convertToNumber(item.luasRataRata),
+              hargaSatuan: convertToNumber(item.hargaSatuan),
+              perkiraanKerusakan: convertToNumber(item.perkiraanKerusakan),
+              perkiraanKerugian: convertToNumber(item.perkiraanKerugian),
+              images: item.images || [],
+            };
+          }
         );
 
         setData({
@@ -155,49 +191,12 @@ export default function Edit() {
           keterangan: result.keterangan || "",
         });
 
-        // Reset currentPrasarana
-        setCurrentPrasarana({
-          prasarana: "",
-          kodeBarang: "",
-          lokasi: "",
-          latitude: 0,
-          longitude: 0,
-          totalKerusakanDanKerugian: 0,
-          kerusakan: {
-            berat: false,
-            sedang: false,
-            ringan: false,
-          },
-          dataKerusakan: {
-            berat: 0,
-            sedang: 0,
-            ringan: 0,
-          },
-          nilaiKerusakanKategori: {
-            berat: 0,
-            sedang: 0,
-            ringan: 0,
-          },
-          luasRataRata: 0,
-          satuan: "",
-          hargaSatuan: 0,
-          perkiraanKerusakan: 0,
-          perkiraanKerugian: 0,
-          keterangan: "",
-          images: [],
+        // Initialize image previews state
+        const initialPreviewState: Record<number, boolean> = {};
+        prasaranaItems.forEach((_: any, index: number) => {
+          initialPreviewState[index] = false;
         });
-
-        setFormattedValues({
-          dataBerat: "",
-          dataSedang: "",
-          dataRingan: "",
-          nilaiBerat: "",
-          nilaiSedang: "",
-          nilaiRingan: "",
-          perkiraanKerusakan: "",
-          perkiraanKerugian: "",
-          totalKerusakanDanKerugian: "",
-        });
+        setShowImagePreviews(initialPreviewState);
       } catch (error) {
         console.error("Gagal mengambil data:", error);
         Swal.fire("Gagal!", "Tidak dapat mengambil data.", "error");
@@ -206,23 +205,7 @@ export default function Edit() {
     fetchData();
   }, [id, navigate]);
 
-  const addPrasarana = () => {
-    if (!currentPrasarana.prasarana) return;
-
-    // Calculate total before adding
-    const total =
-      currentPrasarana.perkiraanKerusakan + currentPrasarana.perkiraanKerugian;
-    const prasaranaWithTotal = {
-      ...currentPrasarana,
-      totalKerusakanDanKerugian: total,
-    };
-
-    setData((prev) => ({
-      ...prev,
-      prasaranaItems: [...prev.prasaranaItems, prasaranaWithTotal],
-    }));
-
-    // Reset with all fields
+  const resetCurrentPrasarana = () => {
     setCurrentPrasarana({
       prasarana: "",
       kodeBarang: "",
@@ -254,7 +237,6 @@ export default function Edit() {
       images: [],
     });
 
-    // Also reset formatted values
     setFormattedValues({
       dataBerat: "",
       dataSedang: "",
@@ -268,89 +250,136 @@ export default function Edit() {
     });
   };
 
+  const updateFormattedValues = (item: PrasaranaItem) => {
+    setFormattedValues({
+      dataBerat: item.dataKerusakan.berat.toString(),
+      dataSedang: item.dataKerusakan.sedang.toString(),
+      dataRingan: item.dataKerusakan.ringan.toString(),
+      nilaiBerat: formatRupiah(item.nilaiKerusakanKategori.berat.toString()),
+      nilaiSedang: formatRupiah(item.nilaiKerusakanKategori.sedang.toString()),
+      nilaiRingan: formatRupiah(item.nilaiKerusakanKategori.ringan.toString()),
+      perkiraanKerusakan: formatRupiah(item.perkiraanKerusakan.toString()),
+      perkiraanKerugian: formatRupiah(item.perkiraanKerugian.toString()),
+      totalKerusakanDanKerugian: formatRupiah(
+        item.totalKerusakanDanKerugian.toString()
+      ),
+    });
+  };
+
+  const addOrUpdatePrasarana = () => {
+    if (!currentPrasarana.prasarana) {
+      Swal.fire("Peringatan", "Prasarana harus diisi", "warning");
+      return;
+    }
+
+    // Hitung total kerusakan dan kerugian
+    const total =
+      currentPrasarana.perkiraanKerusakan + currentPrasarana.perkiraanKerugian;
+
+    const prasaranaWithTotal = {
+      ...currentPrasarana,
+      totalKerusakanDanKerugian: total,
+    };
+
+    if (editingIndex !== null) {
+      // Update existing item
+      setData((prev) => ({
+        ...prev,
+        prasaranaItems: prev.prasaranaItems.map((item, index) =>
+          index === editingIndex ? prasaranaWithTotal : item
+        ),
+      }));
+    } else {
+      // Add new item
+      setData((prev) => ({
+        ...prev,
+        prasaranaItems: [...prev.prasaranaItems, prasaranaWithTotal],
+      }));
+    }
+
+    resetCurrentPrasarana();
+    setEditingIndex(null);
+    setImagePreviews([]);
+  };
+
   const removePrasarana = (index: number) => {
-    setData((prev) => ({
+    Swal.fire({
+      title: "Apakah Anda yakin?",
+      text: "Data prasarana akan dihapus permanen!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Ya, hapus!",
+      cancelButtonText: "Batal",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setData((prev) => ({
+          ...prev,
+          prasaranaItems: prev.prasaranaItems.filter((_, i) => i !== index),
+        }));
+
+        // Update showImagePreviews state
+        setShowImagePreviews((prev) => {
+          const newState = { ...prev };
+          delete newState[index];
+          // Reindex remaining items
+          const updatedState: Record<number, boolean> = {};
+          Object.keys(newState).forEach((key, i) => {
+            updatedState[i] = newState[Number(key)];
+          });
+          return updatedState;
+        });
+
+        if (editingIndex === index) {
+          resetCurrentPrasarana();
+          setEditingIndex(null);
+        } else if (editingIndex !== null && editingIndex > index) {
+          setEditingIndex(editingIndex - 1);
+        }
+
+        Swal.fire("Dihapus!", "Data prasarana telah dihapus.", "success");
+      }
+    });
+  };
+
+  const toggleImagePreviews = (index: number) => {
+    setShowImagePreviews((prev) => ({
       ...prev,
-      prasaranaItems: prev.prasaranaItems.filter((_, i) => i !== index),
+      [index]: !prev[index],
     }));
   };
 
-  const [imagePreviews, setImagePreviews] = useState<
-    { file: File | string; url: string }[]
-  >([]);
+  const editPrasarana = (index: number) => {
+    const itemToEdit = data.prasaranaItems[index];
+    setCurrentPrasarana(itemToEdit);
+    setEditingIndex(index);
+    updateFormattedValues(itemToEdit);
 
-  useEffect(() => {
-    if (data.sarana === "Transportasi Darat" && currentPrasarana.prasarana) {
-      const matched = dataJalan.find(
-        (item) => item.judul === currentPrasarana.prasarana
-      );
-      if (matched) {
-        setCurrentPrasarana((prev) => ({
-          ...prev,
-          kodeBarang: matched.kode,
-        }));
-      }
-    } else {
-      setCurrentPrasarana((prev) => ({
-        ...prev,
-        kodeBarang: "",
-      }));
-    }
-  }, [data.sarana, currentPrasarana.prasarana]);
-
-  useEffect(() => {
-    // Calculate perkiraan kerusakan automatically
-    const perkiraanKerusakan =
-      currentPrasarana.nilaiKerusakanKategori.berat +
-      currentPrasarana.nilaiKerusakanKategori.sedang +
-      currentPrasarana.nilaiKerusakanKategori.ringan;
-
-    const total = perkiraanKerusakan + currentPrasarana.perkiraanKerugian;
-
-    setCurrentPrasarana((prev) => ({
-      ...prev,
-      perkiraanKerusakan,
-      totalKerusakanDanKerugian: total,
-    }));
-
-    setFormattedValues((prev) => ({
-      ...prev,
-      perkiraanKerusakan: formatRupiah(String(perkiraanKerusakan)),
-      totalKerusakanDanKerugian: formatRupiah(String(total)),
-    }));
-  }, [
-    currentPrasarana.nilaiKerusakanKategori.berat,
-    currentPrasarana.nilaiKerusakanKategori.sedang,
-    currentPrasarana.nilaiKerusakanKategori.ringan,
-    currentPrasarana.perkiraanKerugian,
-  ]);
-
-  useEffect(() => {
-    // Buat preview untuk gambar baru
-    const newPreviews = currentPrasarana.images.map((img) => {
-      // Jika sudah ada preview untuk file ini, gunakan yang ada
-      const existing = imagePreviews.find((p) =>
-        typeof img === "string" ? p.file === img : p.file === img
-      );
-      return (
-        existing || {
+    // Create previews for the item being edited
+    const previews = itemToEdit.images.map((img) => {
+      if (typeof img === "string") {
+        // Jika gambar sudah ada (string path)
+        return {
           file: img,
-          url: typeof img === "string" ? img : URL.createObjectURL(img),
-        }
-      );
+          url: `http://localhost:3000/${img.replace(/\\/g, "/")}`,
+        };
+      } else {
+        // Jika gambar baru (File object)
+        return {
+          file: img,
+          url: URL.createObjectURL(img),
+        };
+      }
     });
+    setImagePreviews(previews);
+  };
 
-    setImagePreviews(newPreviews);
-
-    // Bersihkan preview yang tidak digunakan
-    return () => {
-      newPreviews.forEach((preview) => {
-        if (typeof preview.file !== "string") {
-          URL.revokeObjectURL(preview.url);
-        }
-      });
-    };
-  }, [currentPrasarana.images]);
+  const cancelEdit = () => {
+    resetCurrentPrasarana();
+    setEditingIndex(null);
+    setImagePreviews([]);
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -371,22 +400,6 @@ export default function Edit() {
       return;
     }
 
-    const prasaranaItems = [...data.prasaranaItems];
-
-    // Tambahkan currentPrasarana jika belum kosong dan belum ditambahkan
-    if (
-      currentPrasarana.prasarana &&
-      !prasaranaItems.includes(currentPrasarana)
-    ) {
-      const total =
-        currentPrasarana.perkiraanKerusakan +
-        currentPrasarana.perkiraanKerugian;
-      prasaranaItems.push({
-        ...currentPrasarana,
-        totalKerusakanDanKerugian: total,
-      });
-    }
-
     const formData = new FormData();
     formData.append("title", data.title);
     formData.append("sektor", data.sektor);
@@ -394,18 +407,14 @@ export default function Edit() {
     formData.append("sarana", data.sarana);
     formData.append("keterangan", data.keterangan);
 
-    const itemsWithoutImages = prasaranaItems.map((item, index) => {
-      return {
-        ...item,
-        images: item.images.map((_, i) => `prasarana_${index}_img_${i}`),
-      };
-    });
+    formData.append("prasaranaItems", JSON.stringify(data.prasaranaItems));
 
-    formData.append("prasaranaItems", JSON.stringify(itemsWithoutImages));
-
-    prasaranaItems.forEach((item, index) => {
+    // Tambahkan gambar baru ke FormData
+    data.prasaranaItems.forEach((item, index) => {
       item.images.forEach((img, i) => {
-        formData.append(`prasarana_${index}_img_${i}`, img);
+        if (img instanceof File) {
+          formData.append(`prasarana_${index}_img_${i}`, img);
+        }
       });
     });
 
@@ -418,14 +427,19 @@ export default function Edit() {
         body: formData,
       });
 
-      if (!res.ok) throw new Error("Gagal mengupdate data");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Gagal mengupdate data");
+      }
 
       Swal.fire("Berhasil!", "Data berhasil diupdate.", "success").then(() =>
         navigate("/dashboard")
       );
     } catch (err) {
       console.error("Error:", err);
-      Swal.fire("Gagal!", "Gagal mengupdate data.", "error");
+      const errorMessage =
+        err instanceof Error ? err.message : "Gagal mengupdate data.";
+      Swal.fire("Gagal!", errorMessage, "error");
     }
   };
 
@@ -440,7 +454,6 @@ export default function Edit() {
     const checked =
       type === "checkbox" ? (target as HTMLInputElement).checked : undefined;
 
-    // Jika field termasuk dalam prasarana (e.g., prasarana.nama)
     if (name.startsWith("prasarana.")) {
       const fieldName = name.split(".")[1];
       setCurrentPrasarana((prev) => ({
@@ -450,7 +463,6 @@ export default function Edit() {
       return;
     }
 
-    // Ceklis tingkat kerusakan
     if (["berat", "sedang", "ringan"].includes(name)) {
       setCurrentPrasarana((prev) => ({
         ...prev,
@@ -458,12 +470,10 @@ export default function Edit() {
           ...prev.kerusakan,
           [name]: checked,
         },
-        tingkatKerusakan: name,
       }));
       return;
     }
 
-    // Nilai kerusakan per kategori (nilaiBerat, nilaiSedang, nilaiRingan)
     if (["nilaiBerat", "nilaiSedang", "nilaiRingan"].includes(name)) {
       const rawValue = value.replace(/[^0-9]/g, "");
       const numericValue = Number(rawValue);
@@ -484,7 +494,6 @@ export default function Edit() {
       return;
     }
 
-    // Data kerusakan jumlah unit (dataBerat, dataSedang, dataRingan)
     if (["dataBerat", "dataSedang", "dataRingan"].includes(name)) {
       const kategori = name.replace("data", "").toLowerCase();
       const numericValue = Number(value);
@@ -496,6 +505,11 @@ export default function Edit() {
           [kategori]: numericValue,
         },
       }));
+
+      setFormattedValues((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
       return;
     }
 
@@ -506,20 +520,15 @@ export default function Edit() {
       setCurrentPrasarana((prev) => ({
         ...prev,
         perkiraanKerugian: numericValue,
-        totalKerusakanDanKerugian: prev.perkiraanKerusakan + numericValue,
       }));
 
       setFormattedValues((prev) => ({
         ...prev,
         perkiraanKerugian: formatRupiah(value),
-        totalKerusakanDanKerugian: formatRupiah(
-          String(currentPrasarana.perkiraanKerusakan + numericValue)
-        ),
       }));
       return;
     }
 
-    // Untuk field umum lainnya di form utama
     setData((prev) => ({
       ...prev,
       [name]: value,
@@ -546,6 +555,21 @@ export default function Edit() {
       ...prev,
       images: [...prev.images, ...validFiles],
     }));
+
+    // Add new previews
+    const newPreviews = validFiles.map((file) => ({
+      file,
+      url: URL.createObjectURL(file),
+    }));
+    setImagePreviews((prev) => [...prev, ...newPreviews]);
+  };
+
+  const removeImage = (index: number) => {
+    setCurrentPrasarana((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const getSaranaOptions = (): string[] => {
@@ -650,36 +674,8 @@ export default function Edit() {
                     sarana: "",
                     prasaranaItems: [],
                   }));
-                  setCurrentPrasarana({
-                    prasarana: "",
-                    kodeBarang: "",
-                    lokasi: "",
-                    latitude: 0,
-                    longitude: 0,
-                    totalKerusakanDanKerugian: 0,
-                    kerusakan: {
-                      berat: false,
-                      sedang: false,
-                      ringan: false,
-                    },
-                    dataKerusakan: {
-                      berat: 0,
-                      sedang: 0,
-                      ringan: 0,
-                    },
-                    nilaiKerusakanKategori: {
-                      berat: 0,
-                      sedang: 0,
-                      ringan: 0,
-                    },
-                    luasRataRata: 0,
-                    satuan: "",
-                    hargaSatuan: 0,
-                    perkiraanKerusakan: 0,
-                    perkiraanKerugian: 0,
-                    keterangan: "",
-                    images: [],
-                  });
+                  resetCurrentPrasarana();
+                  setEditingIndex(null);
                 }}
                 className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                 disabled={!data.sektor}
@@ -713,36 +709,8 @@ export default function Edit() {
                     sarana: e.target.value,
                     prasaranaItems: [],
                   }));
-                  setCurrentPrasarana({
-                    prasarana: "",
-                    kodeBarang: "",
-                    lokasi: "",
-                    latitude: 0,
-                    longitude: 0,
-                    totalKerusakanDanKerugian: 0,
-                    kerusakan: {
-                      berat: false,
-                      sedang: false,
-                      ringan: false,
-                    },
-                    dataKerusakan: {
-                      berat: 0,
-                      sedang: 0,
-                      ringan: 0,
-                    },
-                    nilaiKerusakanKategori: {
-                      berat: 0,
-                      sedang: 0,
-                      ringan: 0,
-                    },
-                    luasRataRata: 0,
-                    satuan: "",
-                    hargaSatuan: 0,
-                    perkiraanKerusakan: 0,
-                    perkiraanKerugian: 0,
-                    keterangan: "",
-                    images: [],
-                  });
+                  resetCurrentPrasarana();
+                  setEditingIndex(null);
                 }}
                 className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               >
@@ -764,11 +732,146 @@ export default function Edit() {
             />
           )}
 
-          {/* Prasarana Section */}
-          {data.sarana && (
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+          {/* Prasarana List Section */}
+          <div className="mt-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-800">
+                Daftar Prasarana
+              </h3>
+              {editingIndex === null && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetCurrentPrasarana();
+                    setEditingIndex(-1); // -1 indicates new item
+                  }}
+                  className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  + Tambah Prasarana Baru
+                </button>
+              )}
+            </div>
+
+            {data.prasaranaItems.length > 0 ? (
+              <div className="space-y-4">
+                {data.prasaranaItems.map((item, index) => (
+                  <div
+                    key={index}
+                    className={`border p-4 rounded-lg relative ${
+                      editingIndex === index
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 bg-white"
+                    }`}
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">
+                          Prasarana
+                        </label>
+                        <div className="p-2 bg-gray-50 rounded text-sm">
+                          {item.prasarana}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">
+                          Kode Barang
+                        </label>
+                        <div className="p-2 bg-gray-50 rounded text-sm">
+                          {item.kodeBarang}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">
+                          Lokasi
+                        </label>
+                        <div className="p-2 bg-gray-50 rounded text-sm">
+                          {item.lokasi}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">
+                          Total Kerusakan & Kerugian
+                        </label>
+                        <div className="p-2 bg-gray-50 rounded text-sm">
+                          {formatRupiah(
+                            item.totalKerusakanDanKerugian.toString()
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Toggle Image Previews Button */}
+                    {item.images.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => toggleImagePreviews(index)}
+                        className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+                      >
+                        {showImagePreviews[index]
+                          ? "Sembunyikan Gambar"
+                          : "Tampilkan Gambar"}
+                      </button>
+                    )}
+
+                    {/* Image Previews (only shown when toggled) */}
+                    {showImagePreviews[index] && item.images.length > 0 && (
+                      <div className="mt-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                          {item.images.map((img, idx) => (
+                            <div key={idx} className="relative">
+                              <img
+                                src={
+                                  typeof img === "string"
+                                    ? `http://localhost:3000/${img.replace(
+                                        /\\/g,
+                                        "/"
+                                      )}`
+                                    : URL.createObjectURL(img)
+                                }
+                                alt={`preview-${idx}`}
+                                className="w-full h-20 object-cover rounded"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {editingIndex !== index && (
+                      <div className="flex justify-end space-x-2 mt-3">
+                        <button
+                          type="button"
+                          onClick={() => editPrasarana(index)}
+                          className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removePrasarana(index)}
+                          className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                Belum ada prasarana yang ditambahkan
+              </div>
+            )}
+          </div>
+
+          {/* Edit/Create Prasarana Form */}
+          {editingIndex !== null && (
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mt-6">
               <h3 className="text-lg font-medium text-gray-800 mb-4">
-                Prasarana
+                {editingIndex === -1
+                  ? "Tambah Prasarana Baru"
+                  : `Edit Prasarana ${editingIndex + 1}`}
               </h3>
 
               <div className="space-y-4">
@@ -948,7 +1051,7 @@ export default function Edit() {
                         <InputField
                           label="Data Kerusakan Berat"
                           name="dataBerat"
-                          value={currentPrasarana.dataKerusakan.berat}
+                          value={formattedValues.dataBerat}
                           onChange={handleChange}
                         />
                         <InputField
@@ -965,7 +1068,7 @@ export default function Edit() {
                         <InputField
                           label="Data Kerusakan Sedang"
                           name="dataSedang"
-                          value={currentPrasarana.dataKerusakan.sedang}
+                          value={formattedValues.dataSedang}
                           onChange={handleChange}
                         />
                         <InputField
@@ -982,7 +1085,7 @@ export default function Edit() {
                         <InputField
                           label="Data Kerusakan Ringan"
                           name="dataRingan"
-                          value={currentPrasarana.dataKerusakan.ringan}
+                          value={formattedValues.dataRingan}
                           onChange={handleChange}
                         />
                         <InputField
@@ -1108,150 +1211,60 @@ export default function Edit() {
                     </label>
                   </div>
 
-                  {currentPrasarana.images &&
-                    currentPrasarana.images.length > 0 && (
-                      <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                        {imagePreviews.map((preview, idx) => (
-                          <div key={idx} className="relative group">
-                            <img
-                              src={preview.url}
-                              alt={`preview-${idx}`}
-                              className="w-full h-32 object-cover rounded-lg"
-                              onError={(e) => {
-                                // Fallback jika gambar gagal dimuat
-                                (e.target as HTMLImageElement).src =
-                                  "placeholder-image-url";
-                              }}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setCurrentPrasarana((prev) => ({
-                                  ...prev,
-                                  images: prev.images.filter(
-                                    (_, i) => i !== idx
-                                  ),
-                                }));
-                              }}
-                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-4 w-4"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={addPrasarana}
-                  className="mt-2 px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-                >
-                  + Tambah Prasarana
-                </button>
-              </div>
-
-              {data.prasaranaItems.length > 0 && (
-                <div className="mt-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Daftar Prasarana
-                  </label>
-                  <div className="space-y-3">
-                    {data.prasaranaItems.map((item, index) => (
-                      <div
-                        key={index}
-                        className="border border-gray-200 p-4 rounded-lg relative bg-white"
-                      >
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div>
-                            <label className="block text-xs font-medium text-gray-500 mb-1">
-                              Prasarana
-                            </label>
-                            <div className="p-2 bg-gray-50 rounded text-sm">
-                              {item.prasarana}
-                            </div>
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-gray-500 mb-1">
-                              Kode Barang
-                            </label>
-                            <div className="p-2 bg-gray-50 rounded text-sm">
-                              {item.kodeBarang}
-                            </div>
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-gray-500 mb-1">
-                              Lokasi
-                            </label>
-                            <div className="p-2 bg-gray-50 rounded text-sm">
-                              {item.lokasi}
-                            </div>
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-gray-500 mb-1">
-                              Total Kerusakan & Kerugian
-                            </label>
-                            <div className="p-2 bg-gray-50 rounded text-sm">
-                              {formatRupiah(
-                                item.totalKerusakanDanKerugian.toString()
-                              )}
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-xs font-medium text-gray-500 mb-1">
-                                Latitude
-                              </label>
-                              <div className="p-2 bg-gray-50 rounded text-sm">
-                                {item.latitude}
-                              </div>
-                            </div>
-                            <div>
-                              <label className="block text-xs font-medium text-gray-500 mb-1">
-                                Longitude
-                              </label>
-                              <div className="p-2 bg-gray-50 rounded text-sm">
-                                {item.longitude}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removePrasarana(index)}
-                          className="absolute top-3 right-3 text-red-500 hover:text-red-700 p-1"
-                          aria-label="Hapus prasarana"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
+                  {imagePreviews.length > 0 && (
+                    <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                      {imagePreviews.map((preview, idx) => (
+                        <div key={idx} className="relative group">
+                          <img
+                            src={preview.url}
+                            alt={`preview-${idx}`}
+                            className="w-full h-32 object-cover rounded-lg"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src =
+                                "https://via.placeholder.com/150";
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(idx)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"
                           >
-                            <path
-                              fillRule="evenodd"
-                              d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-4 w-4"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
+
+                <div className="flex justify-end space-x-4">
+                  <button
+                    type="button"
+                    onClick={cancelEdit}
+                    className="mt-2 px-4 py-2 rounded-md bg-gray-500 text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={addOrUpdatePrasarana}
+                    className="mt-2 px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                  >
+                    {editingIndex === -1 ? "Tambah" : "Update"}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>
