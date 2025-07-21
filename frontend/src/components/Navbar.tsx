@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Logo from "../assets/logo.png";
 import Logo2 from "../assets/logo-2.png";
+import Logo4 from "../assets/logo4.png";
 import Swal from "sweetalert2";
 
 export default function NavbarProfile() {
@@ -108,6 +109,11 @@ export default function NavbarProfile() {
         <Link to="/" className="flex items-center">
           <img
             src={Logo2}
+            alt="Logo"
+            className="w-16 mr-2 md:mr-4 hover:opacity-90 transition-opacity"
+          />
+          <img
+            src={Logo4}
             alt="Logo"
             className="w-16 mr-2 md:mr-4 hover:opacity-90 transition-opacity"
           />
