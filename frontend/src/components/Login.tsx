@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import Logo from "../assets/logo.png";
+import Logo from "../assets/logo.webp";
 
 export default function Login() {
   const [username, setUsername] = useState("");

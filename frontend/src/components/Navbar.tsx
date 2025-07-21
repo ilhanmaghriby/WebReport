@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Logo from "../assets/logo.png";
-import Logo2 from "../assets/logo-2.png";
-import Logo4 from "../assets/logo4.png";
+import Logo from "../assets/logo.webp";
+import Logo2 from "../assets/logo-2.webp";
+import Logo4 from "../assets/logo4.webp";
 import Swal from "sweetalert2";
 
 export default function NavbarProfile() {
@@ -136,7 +136,8 @@ export default function NavbarProfile() {
               >
                 <div className="hidden sm:flex flex-col items-end leading-tight">
                   <span className="font-medium text-sm text-gray-800 group-hover:text-[#F15A24] transition-colors">
-                    {user.username}
+                    {user.username.charAt(0).toUpperCase() +
+                      user.username.slice(1)}
                   </span>
                 </div>
 
