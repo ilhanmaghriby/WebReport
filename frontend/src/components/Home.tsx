@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import ReportCard from "./Card";
+import { motion } from "framer-motion";
 
 interface ReportData {
   _id: string;
@@ -16,6 +17,33 @@ interface ReportData {
     images?: string[];
   }[];
 }
+
+// Animation variants
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      duration: 0.5,
+    },
+  },
+};
+
+const fadeIn = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.8 } },
+};
+
+const bounceTransition = {
+  y: {
+    duration: 0.8,
+    repeat: Infinity,
+    repeatType: "reverse" as const,
+    ease: "easeOut" as const,
+  },
+};
 
 const Home: React.FC = () => {
   const [reportData, setReportData] = useState<ReportData[]>([]);
@@ -56,22 +84,37 @@ const Home: React.FC = () => {
           background: "linear-gradient(to bottom, #ffe0b2, #ffffff)",
         }}
       >
-        <div className="container mx-auto flex px-5 py-24 items-center justify-center flex-col">
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={fadeIn}
+          className="container mx-auto flex px-5 py-24 items-center justify-center flex-col"
+        >
           <div className="text-center lg:w-2/3 w-full">
-            <h1 className="title-font sm:text-4xl text-3xl mb-4 font-bold text-gray-900">
+            <motion.h1
+              variants={itemVariants}
+              className="title-font sm:text-4xl text-3xl mb-4 font-bold text-gray-900"
+            >
               Inventarisasi Data Kerusakan Pascabencana (SIAP)
-            </h1>
-            <p className="mb-8 leading-relaxed text-gray-800">
+            </motion.h1>
+            <motion.p
+              variants={itemVariants}
+              className="mb-8 leading-relaxed text-gray-800"
+            >
               Sistem digital berbasis web yang menjadi platform terpadu untuk
               inventarisasi data kerusakan pascabencana, terintegrasi dengan
               data Kartu Inventaris Barang (KIB) melalui kalobrasi OPD teknis di
-              Kabupaten Pidie Jaya
-            </p>
+              Kabupaten Pidie Jaya
+            </motion.p>
           </div>
-        </div>
+        </motion.div>
 
         {/* Scroll Down Arrow */}
-        <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce cursor-pointer">
+        <motion.div
+          animate={{ y: [0, 10, 0] }}
+          transition={bounceTransition}
+          className="absolute bottom-10 left-1/2 transform -translate-x-1/2 cursor-pointer"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-10 w-10 text-gray-600 hover:text-gray-800 transition-colors"
@@ -86,7 +129,7 @@ const Home: React.FC = () => {
               d="M19 14l-7 7m0 0l-7-7m7 7V3"
             />
           </svg>
-        </div>
+        </motion.div>
       </section>
 
       {/* Content Section */}

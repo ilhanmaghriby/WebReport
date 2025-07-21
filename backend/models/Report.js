@@ -12,7 +12,6 @@ const PrasaranaItemSchema = new mongoose.Schema({
     sedang: { type: Boolean, default: false },
     ringan: { type: Boolean, default: false },
   },
-  tingkatKerusakan: String,
   dataKerusakan: {
     berat: { type: Number, default: 0 },
     sedang: { type: Number, default: 0 },

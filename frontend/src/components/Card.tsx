@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import MapViewer from "./MapViewer";
 import { exportToExcel } from "./exportToExcel";
 import Swal from "sweetalert2";
@@ -18,6 +19,48 @@ interface ReportCardProps {
     images?: string[];
   }[];
 }
+
+// Animation variants
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut" as const,
+    },
+  },
+  hover: {
+    scale: 1.02,
+    boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
+  },
+};
+
+const imageVariants = {
+  initial: { opacity: 0 },
+  enter: { opacity: 1, transition: { duration: 0.5 } },
+  exit: { opacity: 0 },
+};
+
+const modalVariants = {
+  hidden: { opacity: 0, scale: 0.9 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      duration: 0.3,
+      ease: "easeOut" as const,
+    },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.9,
+    transition: {
+      duration: 0.2,
+    },
+  },
+};
 
 const ReportCard: React.FC<ReportCardProps> = ({
   _id,
@@ -83,8 +126,12 @@ const ReportCard: React.FC<ReportCardProps> = ({
   };
 
   return (
-    <div
-      className="bg-white rounded-xl shadow-md border border-gray-200 flex flex-col md:flex-row w-full h-auto md:h-[280px] overflow-hidden transition-all hover:shadow-lg"
+    <motion.div
+      variants={cardVariants}
+      initial="hidden"
+      animate="visible"
+      whileHover="hover"
+      className="bg-white rounded-xl shadow-md border border-gray-200 flex flex-col md:flex-row w-full h-auto md:h-[280px] overflow-hidden"
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
@@ -92,22 +139,38 @@ const ReportCard: React.FC<ReportCardProps> = ({
       <div className="w-full md:w-[300px] h-[200px] md:h-full flex items-center justify-center bg-gray-100 relative overflow-hidden">
         {allImages.length > 0 ? (
           <>
-            <img
-              src={`http://localhost:3000/${allImages[currentImageIndex]}`}
-              alt="Image"
-              className={`w-full h-full object-cover cursor-pointer transition-transform duration-300 ${
-                isHovering ? "scale-105" : "scale-100"
-              }`}
-              onClick={handleImageClick}
-            />
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={currentImageIndex}
+                src={`http://localhost:3000/${allImages[currentImageIndex]}`}
+                alt="Image"
+                variants={imageVariants}
+                initial="initial"
+                animate="enter"
+                exit="exit"
+                className={`w-full h-full object-cover cursor-pointer`}
+                onClick={handleImageClick}
+                whileHover={{ scale: 1.05 }}
+              />
+            </AnimatePresence>
             {allImages.length > 1 && (
-              <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded-full text-xs">
+              <motion.div
+                className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded-full text-xs"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
                 {currentImageIndex + 1}/{allImages.length}
-              </div>
+              </motion.div>
             )}
           </>
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-500 bg-gradient-to-br from-gray-100 to-gray-200">
+          <motion.div
+            className="w-full h-full flex items-center justify-center text-gray-500 bg-gradient-to-br from-gray-100 to-gray-200"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-12 w-12"
@@ -122,51 +185,59 @@ const ReportCard: React.FC<ReportCardProps> = ({
                 d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
               />
             </svg>
-          </div>
+          </motion.div>
         )}
       </div>
 
       {/* Konten */}
       <div className="flex-1 p-5 flex flex-col justify-between">
         <div className="space-y-2 overflow-hidden">
-          <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
+          <motion.h3
+            className="text-xl font-bold text-gray-900 mb-2 line-clamp-2"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
             {title}
-          </h3>
+          </motion.h3>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
-                Sektor
-              </p>
-              <p className="text-gray-800 font-medium truncate text-sm">
-                {sektor}
-              </p>
-            </div>
-
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
-                Sub Sektor
-              </p>
-              <p className="text-gray-800 font-medium truncate text-sm">
-                {subsektor}
-              </p>
-            </div>
-
-            <div className="bg-gray-50 p-3 rounded-lg col-span-2">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
-                Diupload Oleh
-              </p>
-              <p className="text-gray-800 font-medium truncate text-sm">
-                {uploadedBy}
-              </p>
-            </div>
+            {[
+              { label: "Sektor", value: sektor },
+              { label: "Sub Sektor", value: subsektor },
+              { label: "Diupload Oleh", value: uploadedBy, span: 2 },
+            ].map((item, index) => (
+              <motion.div
+                key={index}
+                className={`bg-gray-50 p-3 rounded-lg ${
+                  item.span ? "col-span-2" : ""
+                }`}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 + index * 0.1 }}
+              >
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+                  {item.label}
+                </p>
+                <p className="text-gray-800 font-medium truncate text-sm">
+                  {item.value}
+                </p>
+              </motion.div>
+            ))}
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 mt-4">
-          <button
+        <motion.div
+          className="flex justify-end gap-3 mt-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+        >
+          <motion.button
             onClick={handleOpenMap}
-            className="flex items-center gap-1 border border-[#2C2F4A] text-[#2C2F4A] px-4 py-2 rounded-lg hover:bg-[#EFEFF7] transition-all hover:shadow-sm"
+            className="flex items-center gap-1 border border-[#2C2F4A] text-[#2C2F4A] px-4 py-2 rounded-lg hover:bg-[#EFEFF7]"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -189,10 +260,15 @@ const ReportCard: React.FC<ReportCardProps> = ({
               />
             </svg>
             Peta
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             onClick={handleExportExcel}
-            className="flex items-center gap-1 bg-[#F15A24] text-white px-4 py-2 rounded-lg hover:bg-orange-600 shadow hover:shadow-md transition-all"
+            className="flex items-center gap-1 bg-[#F15A24] text-white px-4 py-2 rounded-lg hover:bg-orange-600 shadow"
+            whileHover={{
+              scale: 1.05,
+              boxShadow: "0 4px 8px rgba(241, 90, 36, 0.3)",
+            }}
+            whileTap={{ scale: 0.95 }}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -209,43 +285,58 @@ const ReportCard: React.FC<ReportCardProps> = ({
               />
             </svg>
             Lihat Data
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       </div>
 
       {/* Modal Map */}
-      {showMap && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-4xl relative mx-4">
-            <button
-              onClick={() => setShowMap(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
+      <AnimatePresence>
+        {showMap && (
+          <motion.div
+            className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              variants={modalVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="bg-white rounded-xl shadow-xl p-6 w-full max-w-4xl relative mx-4"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+              <motion.button
+                onClick={() => setShowMap(false)}
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-            <h3 className="text-lg font-bold text-gray-900 mb-4">
-              Location Map
-            </h3>
-            <div className="h-[500px]">
-              <MapViewer prasaranaItems={prasaranaItems} />
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </motion.button>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">
+                Location Map
+              </h3>
+              <div className="h-[500px]">
+                <MapViewer prasaranaItems={prasaranaItems} />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 };
 

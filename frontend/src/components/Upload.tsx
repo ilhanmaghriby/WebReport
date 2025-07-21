@@ -16,11 +16,10 @@ interface PrasaranaItem {
     sedang: boolean;
     ringan: boolean;
   };
-  tingkatKerusakan: string;
   dataKerusakan: {
-    berat: 0;
-    sedang: 0;
-    ringan: 0;
+    berat: number;
+    sedang: number;
+    ringan: number;
   };
   nilaiKerusakanKategori: {
     berat: number;
@@ -33,7 +32,18 @@ interface PrasaranaItem {
   perkiraanKerusakan: number;
   perkiraanKerugian: number;
   keterangan: string;
-  images: File[]; // <== tambahkan ini
+  images: File[];
+}
+
+interface InputFieldProps {
+  label: string;
+  name: string;
+  value: string | number;
+  onChange?: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  type?: string;
+  disabled?: boolean;
+  readOnly?: boolean;
+  placeholder?: string;
 }
 
 export default function Upload() {
@@ -58,7 +68,6 @@ export default function Upload() {
       sedang: false,
       ringan: false,
     },
-    tingkatKerusakan: "",
     dataKerusakan: {
       berat: 0,
       sedang: 0,
@@ -121,7 +130,6 @@ export default function Upload() {
         sedang: false,
         ringan: false,
       },
-      tingkatKerusakan: "",
       dataKerusakan: {
         berat: 0,
         sedang: 0,
@@ -162,6 +170,10 @@ export default function Upload() {
     }));
   };
 
+  const [imagePreviews, setImagePreviews] = useState<
+    { file: File | string; url: string }[]
+  >([]);
+
   useEffect(() => {
     if (data.sarana === "Transportasi Darat" && currentPrasarana.prasarana) {
       const matched = dataJalan.find(
@@ -181,9 +193,66 @@ export default function Upload() {
     }
   }, [data.sarana, currentPrasarana.prasarana]);
 
+  useEffect(() => {
+    // Calculate perkiraan kerusakan automatically
+    const perkiraanKerusakan =
+      currentPrasarana.nilaiKerusakanKategori.berat +
+      currentPrasarana.nilaiKerusakanKategori.sedang +
+      currentPrasarana.nilaiKerusakanKategori.ringan;
+
+    const total = perkiraanKerusakan + currentPrasarana.perkiraanKerugian;
+
+    setCurrentPrasarana((prev) => ({
+      ...prev,
+      perkiraanKerusakan,
+      totalKerusakanDanKerugian: total,
+    }));
+
+    setFormattedValues((prev) => ({
+      ...prev,
+      perkiraanKerusakan: formatRupiah(String(perkiraanKerusakan)),
+      totalKerusakanDanKerugian: formatRupiah(String(total)),
+    }));
+  }, [
+    currentPrasarana.nilaiKerusakanKategori.berat,
+    currentPrasarana.nilaiKerusakanKategori.sedang,
+    currentPrasarana.nilaiKerusakanKategori.ringan,
+    currentPrasarana.dataKerusakan.berat,
+    currentPrasarana.dataKerusakan.sedang,
+    currentPrasarana.dataKerusakan.ringan,
+    currentPrasarana.perkiraanKerugian,
+  ]);
+
+  useEffect(() => {
+    // Buat preview untuk gambar baru
+    const newPreviews = currentPrasarana.images.map((img) => {
+      // Jika sudah ada preview untuk file ini, gunakan yang ada
+      const existing = imagePreviews.find((p) =>
+        typeof img === "string" ? p.file === img : p.file === img
+      );
+      return (
+        existing || {
+          file: img,
+          url: typeof img === "string" ? img : URL.createObjectURL(img),
+        }
+      );
+    });
+
+    setImagePreviews(newPreviews);
+
+    // Bersihkan preview yang tidak digunakan
+    return () => {
+      newPreviews.forEach((preview) => {
+        if (typeof preview.file !== "string") {
+          URL.revokeObjectURL(preview.url);
+        }
+      });
+    };
+  }, [currentPrasarana.images]);
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
+    // Validasi input utama
     if (
       !data.title ||
       !data.sektor ||
@@ -199,44 +268,67 @@ export default function Upload() {
       return;
     }
 
-    let prasaranaItems = [...data.prasaranaItems];
+    // Validasi untuk currentPrasarana jika ada yang belum ditambahkan
+    const isCurrentFilled =
+      currentPrasarana.prasarana &&
+      currentPrasarana.kodeBarang &&
+      currentPrasarana.lokasi;
 
-    // Tambahkan currentPrasarana terakhir (jika belum ditambahkan)
-    if (currentPrasarana.prasarana) {
-      const total =
-        currentPrasarana.perkiraanKerusakan +
-        currentPrasarana.perkiraanKerugian;
-      prasaranaItems.push({
-        ...currentPrasarana,
-        totalKerusakanDanKerugian: total,
-      });
+    if (isCurrentFilled) {
+      // Jika ada currentPrasarana yang belum ditambahkan, validasi juga
+      if (
+        !currentPrasarana.prasarana ||
+        !currentPrasarana.kodeBarang ||
+        !currentPrasarana.lokasi
+      ) {
+        Swal.fire({
+          icon: "warning",
+          title: "Lengkapi Data Prasarana",
+          text: "Harap lengkapi data prasarana yang sedang diisi atau tambahkan ke daftar.",
+        });
+        return;
+      }
     }
 
-    const formData = new FormData();
-    formData.append("title", data.title);
-    formData.append("sektor", data.sektor);
-    formData.append("subsektor", data.subsektor);
-    formData.append("sarana", data.sarana);
-    formData.append("keterangan", data.keterangan);
-
-    // Kirim data prasarana (tanpa gambar) sebagai JSON
-    const itemsWithoutImages = prasaranaItems.map((item, index) => {
-      return {
-        ...item,
-        images: item.images.map((_, i) => `prasarana_${index}_img_${i}`), // placeholder nama gambar
-      };
-    });
-
-    formData.append("prasaranaItems", JSON.stringify(itemsWithoutImages));
-
-    // Tambahkan file gambar-gambar ke FormData
-    prasaranaItems.forEach((item, index) => {
-      item.images.forEach((img, i) => {
-        formData.append(`prasarana_${index}_img_${i}`, img);
-      });
-    });
-
     try {
+      let prasaranaItems = [...data.prasaranaItems];
+
+      // Jika currentPrasarana sedang diisi (belum ditambahkan), tambahkan juga
+      if (isCurrentFilled) {
+        const total =
+          currentPrasarana.perkiraanKerusakan +
+          currentPrasarana.perkiraanKerugian;
+
+        prasaranaItems.push({
+          ...currentPrasarana,
+          totalKerusakanDanKerugian: total,
+        });
+      }
+
+      const formData = new FormData();
+
+      // Isi data utama
+      formData.append("title", data.title);
+      formData.append("sektor", data.sektor);
+      formData.append("subsektor", data.subsektor);
+      formData.append("sarana", data.sarana);
+      formData.append("keterangan", data.keterangan);
+
+      // Siapkan prasarana tanpa gambar untuk dikirim sebagai JSON
+      const itemsWithoutImages = prasaranaItems.map((item, index) => ({
+        ...item,
+        images: item.images.map((_, i) => `prasarana_${index}_img_${i}`),
+      }));
+
+      formData.append("prasaranaItems", JSON.stringify(itemsWithoutImages));
+
+      // Tambahkan gambar-gambar prasarana ke FormData
+      prasaranaItems.forEach((item, index) => {
+        item.images.forEach((img, i) => {
+          formData.append(`prasarana_${index}_img_${i}`, img);
+        });
+      });
+
       const res = await fetch("http://localhost:3000/report", {
         method: "POST",
         headers: {
@@ -245,7 +337,11 @@ export default function Upload() {
         body: formData,
       });
 
-      if (!res.ok) throw new Error("Gagal mengirim data");
+      if (!res.ok) {
+        // Jika response tidak OK, throw error dan tidak lanjut ke success handler
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || "Gagal mengirim data ke server");
+      }
 
       const result = await res.json();
       console.log("Sukses:", result);
@@ -258,11 +354,19 @@ export default function Upload() {
       }).then(() => {
         navigate("/dashboard");
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error:", err);
+
+      // Membersihkan preview gambar jika submit gagal
+      setImagePreviews([]);
+      setCurrentPrasarana((prev) => ({
+        ...prev,
+        images: [],
+      }));
+
       Swal.fire({
         title: "Gagal!",
-        text: "Gagal mengirim data.",
+        text: err?.message || "Gagal mengirim data.",
         icon: "error",
         confirmButtonText: "OK",
       });
@@ -272,9 +376,15 @@ export default function Upload() {
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    const { name, value } = e.target;
+    const target = e.target as
+      | HTMLInputElement
+      | HTMLTextAreaElement
+      | HTMLSelectElement;
+    const { name, value, type } = target;
+    const checked =
+      type === "checkbox" ? (target as HTMLInputElement).checked : undefined;
 
-    // Handle changes for currentPrasarana
+    // Jika field termasuk dalam prasarana (e.g., prasarana.nama)
     if (name.startsWith("prasarana.")) {
       const fieldName = name.split(".")[1];
       setCurrentPrasarana((prev) => ({
@@ -284,33 +394,33 @@ export default function Upload() {
       return;
     }
 
-    // Handle kerusakan checkboxes for currentPrasarana
+    // Ceklis tingkat kerusakan
     if (["berat", "sedang", "ringan"].includes(name)) {
       setCurrentPrasarana((prev) => ({
         ...prev,
         kerusakan: {
           ...prev.kerusakan,
-          [name]: (e.target as HTMLInputElement).checked,
+          [name]: checked,
         },
         tingkatKerusakan: name,
       }));
       return;
     }
 
-    // Handle nilai kerusakan kategori for currentPrasarana
+    // Nilai kerusakan per kategori (nilaiBerat, nilaiSedang, nilaiRingan)
     if (["nilaiBerat", "nilaiSedang", "nilaiRingan"].includes(name)) {
       const rawValue = value.replace(/[^0-9]/g, "");
       const numericValue = Number(rawValue);
+      const kategori = name.replace("nilai", "").toLowerCase();
 
       setCurrentPrasarana((prev) => ({
         ...prev,
         nilaiKerusakanKategori: {
           ...prev.nilaiKerusakanKategori,
-          [name.replace("nilai", "").toLowerCase()]: numericValue,
+          [kategori]: numericValue,
         },
       }));
 
-      // Update formatted values
       setFormattedValues((prev) => ({
         ...prev,
         [name]: formatRupiah(value),
@@ -318,50 +428,46 @@ export default function Upload() {
       return;
     }
 
-    // Handle data kerusakan for currentPrasarana
+    // Data kerusakan jumlah unit (dataBerat, dataSedang, dataRingan)
     if (["dataBerat", "dataSedang", "dataRingan"].includes(name)) {
-      const numericValue = Number(value); // tidak pakai regex hapus Rp
+      const kategori = name.replace("data", "").toLowerCase();
+      const numericValue = Number(value); // tidak diformat ke rupiah
+
       setCurrentPrasarana((prev) => ({
         ...prev,
         dataKerusakan: {
           ...prev.dataKerusakan,
-          [name.replace("data", "").toLowerCase()]: numericValue,
+          [kategori]: numericValue,
         },
       }));
       return;
     }
 
-    // Handle perkiraan kerusakan/kerugian for currentPrasarana
-    if (["perkiraanKerusakan", "perkiraanKerugian"].includes(name)) {
+    if (name === "perkiraanKerugian") {
       const rawValue = value.replace(/[^0-9]/g, "");
       const numericValue = Number(rawValue);
 
       setCurrentPrasarana((prev) => ({
         ...prev,
-        [name]: numericValue,
-        totalKerusakanDanKerugian:
-          name === "perkiraanKerusakan"
-            ? numericValue + prev.perkiraanKerugian
-            : prev.perkiraanKerusakan + numericValue,
+        perkiraanKerugian: numericValue,
+        totalKerusakanDanKerugian: prev.perkiraanKerusakan + numericValue,
       }));
 
-      // Update formatted values
       setFormattedValues((prev) => ({
         ...prev,
-        [name]: formatRupiah(value),
+        perkiraanKerugian: formatRupiah(value),
         totalKerusakanDanKerugian: formatRupiah(
-          String(
-            name === "perkiraanKerusakan"
-              ? numericValue + currentPrasarana.perkiraanKerugian
-              : currentPrasarana.perkiraanKerusakan + numericValue
-          )
+          String(currentPrasarana.perkiraanKerusakan + numericValue)
         ),
       }));
       return;
     }
 
-    // Handle other fields for the main form
-    setData((prev) => ({ ...prev, [name]: value }));
+    // Untuk field umum lainnya di form utama
+    setData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -451,17 +557,6 @@ export default function Upload() {
     return split[1] !== undefined ? `Rp ${rupiah},${split[1]}` : `Rp ${rupiah}`;
   };
 
-  useEffect(() => {
-    const total =
-      (currentPrasarana.perkiraanKerusakan || 0) +
-      (currentPrasarana.perkiraanKerugian || 0);
-
-    setCurrentPrasarana((prev) => ({
-      ...prev,
-      totalKerusakanDanKerugian: total,
-    }));
-  }, [currentPrasarana.perkiraanKerusakan, currentPrasarana.perkiraanKerugian]);
-
   return (
     <form
       onSubmit={handleSubmit}
@@ -537,7 +632,6 @@ export default function Upload() {
                       sedang: false,
                       ringan: false,
                     },
-                    tingkatKerusakan: "",
                     dataKerusakan: {
                       berat: 0,
                       sedang: 0,
@@ -601,7 +695,6 @@ export default function Upload() {
                       sedang: false,
                       ringan: false,
                     },
-                    tingkatKerusakan: "",
                     dataKerusakan: {
                       berat: 0,
                       sedang: 0,
@@ -787,93 +880,93 @@ export default function Upload() {
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Tingkat Kerusakan
-                      </label>
-                      <select
-                        name="tingkatKerusakan"
-                        value={currentPrasarana.tingkatKerusakan}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          setCurrentPrasarana((prev) => ({
-                            ...prev,
-                            tingkatKerusakan: value,
-                            kerusakan: {
-                              berat: value === "berat",
-                              sedang: value === "sedang",
-                              ringan: value === "ringan",
-                            },
-                          }));
-                        }}
-                        className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                      >
-                        <option value="">-- Pilih Tingkat Kerusakan --</option>
-                        <option value="berat">Berat</option>
-                        <option value="sedang">Sedang</option>
-                        <option value="ringan">Ringan</option>
-                      </select>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Tingkat Kerusakan
+                          </label>
+                          <div className="flex flex-wrap gap-4">
+                            {["berat", "sedang", "ringan"].map((level) => (
+                              <label
+                                key={level}
+                                className="inline-flex items-center px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 cursor-pointer transition-colors"
+                              >
+                                <input
+                                  type="checkbox"
+                                  name={level}
+                                  checked={
+                                    currentPrasarana.kerusakan[
+                                      level as keyof typeof currentPrasarana.kerusakan
+                                    ]
+                                  }
+                                  onChange={handleChange}
+                                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                />
+                                <span className="ml-2 text-sm font-medium text-gray-700 capitalize">
+                                  {level}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
                     <InputField
                       label="Satuan"
                       name="prasarana.satuan"
-                      type="text"
                       value={currentPrasarana.satuan}
                       onChange={handleChange}
-                      placeholder="Contoh: meter, unit, dll"
                     />
-                    {currentPrasarana.tingkatKerusakan === "berat" && (
-                      <InputField
-                        label="Data Kerusakan Berat"
-                        name="dataBerat"
-                        value={currentPrasarana.dataKerusakan.berat}
-                        onChange={handleChange}
-                      />
+                    {currentPrasarana.kerusakan.berat && (
+                      <>
+                        <InputField
+                          label="Data Kerusakan Berat"
+                          name="dataBerat"
+                          value={currentPrasarana.dataKerusakan.berat}
+                          onChange={handleChange}
+                        />
+                        <InputField
+                          label="Nilai Kerusakan Berat (Rp)"
+                          name="nilaiBerat"
+                          value={formattedValues.nilaiBerat}
+                          onChange={handleChange}
+                        />
+                      </>
                     )}
 
-                    {currentPrasarana.tingkatKerusakan === "sedang" && (
-                      <InputField
-                        label="Data Kerusakan Sedang"
-                        name="dataSedang"
-                        value={currentPrasarana.dataKerusakan.sedang}
-                        onChange={handleChange}
-                      />
+                    {currentPrasarana.kerusakan.sedang && (
+                      <>
+                        <InputField
+                          label="Data Kerusakan Sedang"
+                          name="dataSedang"
+                          value={currentPrasarana.dataKerusakan.sedang}
+                          onChange={handleChange}
+                        />
+                        <InputField
+                          label="Nilai Kerusakan Sedang (Rp)"
+                          name="nilaiSedang"
+                          value={formattedValues.nilaiSedang}
+                          onChange={handleChange}
+                        />
+                      </>
                     )}
 
-                    {currentPrasarana.tingkatKerusakan === "ringan" && (
-                      <InputField
-                        label="Data Kerusakan Ringan"
-                        name="dataRingan"
-                        value={currentPrasarana.dataKerusakan.ringan}
-                        onChange={handleChange}
-                      />
-                    )}
-
-                    {currentPrasarana.tingkatKerusakan === "berat" && (
-                      <InputField
-                        label="Nilai Kerusakan Berat (Rp)"
-                        name="nilaiBerat"
-                        value={formattedValues.nilaiBerat}
-                        onChange={handleChange}
-                      />
-                    )}
-
-                    {currentPrasarana.tingkatKerusakan === "sedang" && (
-                      <InputField
-                        label="Nilai Kerusakan Sedang (Rp)"
-                        name="nilaiSedang"
-                        value={formattedValues.nilaiSedang}
-                        onChange={handleChange}
-                      />
-                    )}
-
-                    {currentPrasarana.tingkatKerusakan === "ringan" && (
-                      <InputField
-                        label="Nilai Kerusakan Ringan (Rp)"
-                        name="nilaiRingan"
-                        value={formattedValues.nilaiRingan}
-                        onChange={handleChange}
-                      />
+                    {currentPrasarana.kerusakan.ringan && (
+                      <>
+                        <InputField
+                          label="Data Kerusakan Ringan"
+                          name="dataRingan"
+                          value={currentPrasarana.dataKerusakan.ringan}
+                          onChange={handleChange}
+                        />
+                        <InputField
+                          label="Nilai Kerusakan Ringan (Rp)"
+                          name="nilaiRingan"
+                          value={formattedValues.nilaiRingan}
+                          onChange={handleChange}
+                        />
+                      </>
                     )}
                   </div>
                 </div>
@@ -911,7 +1004,7 @@ export default function Upload() {
                       label="Perkiraan Kerusakan (Rp)"
                       name="perkiraanKerusakan"
                       value={formattedValues.perkiraanKerusakan}
-                      onChange={handleChange}
+                      readOnly
                     />
                     <InputField
                       label="Perkiraan Kerugian (Rp)"
@@ -984,7 +1077,7 @@ export default function Upload() {
                         name="images"
                         multiple
                         accept="image/*"
-                        onChange={handleImageChange} // <- sudah kamu ubah sebelumnya
+                        onChange={handleImageChange}
                         className="hidden"
                       />
                     </label>
@@ -994,24 +1087,29 @@ export default function Upload() {
                   {currentPrasarana.images &&
                     currentPrasarana.images.length > 0 && (
                       <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                        {currentPrasarana.images.map((img, idx) => (
+                        {imagePreviews.map((preview, idx) => (
                           <div key={idx} className="relative group">
                             <img
-                              src={URL.createObjectURL(img)}
+                              src={preview.url}
                               alt={`preview-${idx}`}
                               className="w-full h-32 object-cover rounded-lg"
+                              onError={(e) => {
+                                // Fallback jika gambar gagal dimuat
+                                (e.target as HTMLImageElement).src =
+                                  "placeholder-image-url";
+                              }}
                             />
                             <button
                               type="button"
-                              onClick={() =>
+                              onClick={() => {
                                 setCurrentPrasarana((prev) => ({
                                   ...prev,
                                   images: prev.images.filter(
                                     (_, i) => i !== idx
                                   ),
-                                }))
-                              }
-                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                }));
+                              }}
+                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -1075,14 +1173,6 @@ export default function Upload() {
                             </label>
                             <div className="p-2 bg-gray-50 rounded text-sm">
                               {item.lokasi}
-                            </div>
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-gray-500 mb-1">
-                              Kerusakan
-                            </label>
-                            <div className="p-2 bg-gray-50 rounded text-sm">
-                              {item.tingkatKerusakan}
                             </div>
                           </div>
                           <div>
@@ -1179,16 +1269,9 @@ const InputField = ({
   onChange,
   type = "text",
   disabled = false,
+  readOnly = false,
   placeholder = "",
-}: {
-  label: string;
-  name: string;
-  value: string | number;
-  onChange?: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  type?: string;
-  disabled?: boolean;
-  placeholder?: string;
-}) => (
+}: InputFieldProps) => (
   <div className="mb-4">
     <label
       htmlFor={name}
@@ -1203,8 +1286,11 @@ const InputField = ({
       value={value}
       onChange={onChange}
       disabled={disabled}
+      readOnly={readOnly}
       placeholder={placeholder}
-      className="w-full border border-gray-300 rounded-md px-4 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:text-gray-500"
+      className={`w-full border border-gray-300 rounded-md px-4 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+        disabled ? "bg-gray-100 text-gray-500" : ""
+      } ${readOnly ? "bg-gray-50 cursor-not-allowed" : ""}`}
     />
   </div>
 );
