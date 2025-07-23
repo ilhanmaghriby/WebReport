@@ -19,7 +19,6 @@ interface ReportData {
 }
 
 // Animation variants
-
 const itemVariants = {
   hidden: { y: 20, opacity: 0 },
   visible: {
@@ -113,7 +112,7 @@ const Home: React.FC = () => {
         <motion.div
           animate={{ y: [0, 10, 0] }}
           transition={bounceTransition}
-          className="absolute bottom-10 left-1/2 transform -translate-x-1/2 cursor-pointer"
+          className="absolute bottom-10  transform -translate-x-1/2 cursor-pointer"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -144,9 +143,34 @@ const Home: React.FC = () => {
             </div>
           </div>
         ) : reportData.length === 0 ? (
-          <div className="text-center text-gray-500 text-lg mt-20">
-            Belum ada data yang masuk atau diverifikasi
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-col items-center justify-center py-16 text-center"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-24 w-24 text-gray-400 mb-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <h3 className="text-2xl font-medium text-gray-600 mb-2">
+              Belum ada data yang masuk atau diverifikasi
+            </h3>
+            <p className="text-gray-500 max-w-md">
+              Saat ini tidak ada laporan kerusakan yang telah diverifikasi.
+              Silakan periksa kembali nanti.
+            </p>
+          </motion.div>
         ) : (
           <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             {reportData.map((report) => (

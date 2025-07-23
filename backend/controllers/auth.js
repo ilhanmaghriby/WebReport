@@ -4,7 +4,7 @@ const bcrypt = require("bcryptjs");
 
 // Environment variables
 const JWT_SECRET = process.env.JWT_SECRET || "yokoso123";
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "1h";
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "1d";
 
 exports.login = async (req, res) => {
   const { username, password } = req.body;
