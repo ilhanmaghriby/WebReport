@@ -205,6 +205,55 @@ export default function Edit() {
     fetchData();
   }, [id, navigate]);
 
+  useEffect(() => {
+    if (data.sarana === "Transportasi Darat" && currentPrasarana.prasarana) {
+      const matched = dataJalan.find(
+        (item) => item.judul === currentPrasarana.prasarana
+      );
+      if (matched) {
+        setCurrentPrasarana((prev) => ({
+          ...prev,
+          kodeBarang: matched.kode,
+        }));
+      }
+    } else {
+      setCurrentPrasarana((prev) => ({
+        ...prev,
+        kodeBarang: "",
+      }));
+    }
+  }, [data.sarana, currentPrasarana.prasarana]);
+
+  useEffect(() => {
+    // Calculate perkiraan kerusakan automatically
+    const perkiraanKerusakan =
+      currentPrasarana.nilaiKerusakanKategori.berat +
+      currentPrasarana.nilaiKerusakanKategori.sedang +
+      currentPrasarana.nilaiKerusakanKategori.ringan;
+
+    const total = perkiraanKerusakan + currentPrasarana.perkiraanKerugian;
+
+    setCurrentPrasarana((prev) => ({
+      ...prev,
+      perkiraanKerusakan,
+      totalKerusakanDanKerugian: total,
+    }));
+
+    setFormattedValues((prev) => ({
+      ...prev,
+      perkiraanKerusakan: formatRupiah(String(perkiraanKerusakan)),
+      totalKerusakanDanKerugian: formatRupiah(String(total)),
+    }));
+  }, [
+    currentPrasarana.nilaiKerusakanKategori.berat,
+    currentPrasarana.nilaiKerusakanKategori.sedang,
+    currentPrasarana.nilaiKerusakanKategori.ringan,
+    currentPrasarana.dataKerusakan.berat,
+    currentPrasarana.dataKerusakan.sedang,
+    currentPrasarana.dataKerusakan.ringan,
+    currentPrasarana.perkiraanKerugian,
+  ]);
+
   const resetCurrentPrasarana = () => {
     setCurrentPrasarana({
       prasarana: "",
@@ -272,7 +321,6 @@ export default function Edit() {
       return;
     }
 
-    // Hitung total kerusakan dan kerugian
     const total =
       currentPrasarana.perkiraanKerusakan + currentPrasarana.perkiraanKerugian;
 
@@ -281,7 +329,7 @@ export default function Edit() {
       totalKerusakanDanKerugian: total,
     };
 
-    if (editingIndex !== null) {
+    if (editingIndex !== null && editingIndex < data.prasaranaItems.length) {
       // Update existing item
       setData((prev) => ({
         ...prev,
@@ -496,7 +544,7 @@ export default function Edit() {
 
     if (["dataBerat", "dataSedang", "dataRingan"].includes(name)) {
       const kategori = name.replace("data", "").toLowerCase();
-      const numericValue = Number(value);
+      const numericValue = Number(value); // tidak diformat ke rupiah
 
       setCurrentPrasarana((prev) => ({
         ...prev,
@@ -504,11 +552,6 @@ export default function Edit() {
           ...prev.dataKerusakan,
           [kategori]: numericValue,
         },
-      }));
-
-      setFormattedValues((prev) => ({
-        ...prev,
-        [name]: value,
       }));
       return;
     }
@@ -743,7 +786,7 @@ export default function Edit() {
                   type="button"
                   onClick={() => {
                     resetCurrentPrasarana();
-                    setEditingIndex(-1); // -1 indicates new item
+                    setEditingIndex(data.prasaranaItems.length); // Gunakan length sebagai index baru
                   }}
                   className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
                 >
@@ -869,7 +912,7 @@ export default function Edit() {
           {editingIndex !== null && (
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mt-6">
               <h3 className="text-lg font-medium text-gray-800 mb-4">
-                {editingIndex === -1
+                {editingIndex >= data.prasaranaItems.length
                   ? "Tambah Prasarana Baru"
                   : `Edit Prasarana ${editingIndex + 1}`}
               </h3>
@@ -1017,11 +1060,11 @@ export default function Edit() {
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Tingkat Kerusakan
                         </label>
-                        <div className="flex gap-4">
+                        <div className="flex flex-wrap gap-4">
                           {["berat", "sedang", "ringan"].map((level) => (
                             <label
                               key={level}
-                              className="inline-flex items-center gap-2"
+                              className="inline-flex items-center px-4 py-2 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 cursor-pointer transition-colors"
                             >
                               <input
                                 type="checkbox"
@@ -1032,8 +1075,11 @@ export default function Edit() {
                                   ]
                                 }
                                 onChange={handleChange}
+                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                               />
-                              <span className="capitalize">{level}</span>
+                              <span className="ml-2 text-sm font-medium text-gray-700 capitalize">
+                                {level}
+                              </span>
                             </label>
                           ))}
                         </div>
@@ -1051,7 +1097,7 @@ export default function Edit() {
                         <InputField
                           label="Data Kerusakan Berat"
                           name="dataBerat"
-                          value={formattedValues.dataBerat}
+                          value={currentPrasarana.dataKerusakan.berat}
                           onChange={handleChange}
                         />
                         <InputField
@@ -1068,7 +1114,7 @@ export default function Edit() {
                         <InputField
                           label="Data Kerusakan Sedang"
                           name="dataSedang"
-                          value={formattedValues.dataSedang}
+                          value={currentPrasarana.dataKerusakan.sedang}
                           onChange={handleChange}
                         />
                         <InputField
@@ -1085,7 +1131,7 @@ export default function Edit() {
                         <InputField
                           label="Data Kerusakan Ringan"
                           name="dataRingan"
-                          value={formattedValues.dataRingan}
+                          value={currentPrasarana.dataKerusakan.ringan}
                           onChange={handleChange}
                         />
                         <InputField
