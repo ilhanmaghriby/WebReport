@@ -168,7 +168,8 @@ export default function NavbarProfile() {
                 <div className="absolute right-0 top-12 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50">
                   <div className="px-4 py-3 border-b border-gray-100">
                     <p className="text-sm font-medium text-gray-900">
-                      {user.username}
+                      {user.username.charAt(0).toUpperCase() +
+                        user.username.slice(1)}
                     </p>
                   </div>
 
