@@ -7,24 +7,23 @@ import Swal from "sweetalert2";
 
 export default function NavbarProfile() {
   const [open, setOpen] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
   const [user, setUser] = useState({ username: "", role: "" });
   const [isLoading, setIsLoading] = useState(true);
   const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
+  // Ganti VIDEO_ID dengan ID video YouTube yang diinginkan
+  const VIDEO_URL = "https://www.youtube.com/embed/VIDEO_ID";
+
   useEffect(() => {
     const handleScroll = () => {
       const isScrolled = window.scrollY > 10;
-      if (isScrolled !== scrolled) {
-        setScrolled(isScrolled);
-      }
+      if (isScrolled !== scrolled) setScrolled(isScrolled);
     };
-
     document.addEventListener("scroll", handleScroll, { passive: true });
-    return () => {
-      document.removeEventListener("scroll", handleScroll);
-    };
+    return () => document.removeEventListener("scroll", handleScroll);
   }, [scrolled]);
 
   useEffect(() => {
@@ -33,14 +32,10 @@ export default function NavbarProfile() {
         setIsLoading(false);
         return;
       }
-
       try {
         const res = await fetch("http://localhost:3000/auth/profile", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
-
         if (res.ok) {
           const data = await res.json();
           setUser(data);
@@ -51,7 +46,6 @@ export default function NavbarProfile() {
         setIsLoading(false);
       }
     };
-
     fetchProfile();
   }, [token]);
 
@@ -72,7 +66,6 @@ export default function NavbarProfile() {
           title: "Logged Out",
           text: "You have been successfully logged out",
           icon: "success",
-          confirmButtonColor: "#F15A24",
           timer: 1500,
         });
       }
@@ -124,8 +117,28 @@ export default function NavbarProfile() {
           />
         </Link>
 
-        {/* User profile */}
+        {/* User profile / Actions */}
         <div className="flex items-center space-x-4">
+          {/* Video Guide Button (Always visible) */}
+          <button
+            onClick={() => setShowVideo(true)}
+            className="hidden sm:inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg shadow-sm text-white bg-[#2E3B4E] hover:bg-[#253046] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2E3B4E] transition-colors"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 mr-2"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M4.5 3.5a.5.5 0 01.5-.5h.75a.5.5 0 01.5.5v13a.5.5 0 01-.5.5h-.75a.5.5 0 01-.5-.5v-13zM6.5 10l6 3.5V6.5L6.5 10z"
+                clipRule="evenodd"
+              />
+            </svg>
+            Video Panduan
+          </button>
+
           {token ? (
             <div className="relative">
               <button
@@ -247,7 +260,7 @@ export default function NavbarProfile() {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                          d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2 2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2 2a2 2 0 012 2v2a2 2 0 01-2 2H6 2a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2 2a2 2 0 012 2v2a2 2 0 01-2 2h-2 2a2 2 0 01-2-2v-2z"
                         />
                       </svg>
                       Dashboard
@@ -278,12 +291,14 @@ export default function NavbarProfile() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
+              {/* Login Button (Desktop) */}
               <Link
                 to="/login"
                 className="hidden sm:inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-[#F15A24] hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors"
               >
                 Login
               </Link>
+              {/* Login Icon (Mobile) */}
               <Link
                 to="/login"
                 className="sm:hidden inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-white bg-[#F15A24] hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors"
@@ -299,7 +314,7 @@ export default function NavbarProfile() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                    d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7  a3 3 0 013-3h7a3 3 0 013 3v1"
                   />
                 </svg>
               </Link>
@@ -307,6 +322,34 @@ export default function NavbarProfile() {
           )}
         </div>
       </div>
+      {/* Video Modal */}
+      {showVideo && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg overflow-hidden max-w-3xl w-full">
+            <div className="flex justify-end p-2">
+              <button
+                onClick={() => setShowVideo(false)}
+                className="text-gray-500 hover:text-gray-800"
+              >
+                ✕
+              </button>
+            </div>
+            <div
+              className="relative"
+              style={{ paddingBottom: "56.25%", height: 0 }}
+            >
+              <iframe
+                src={VIDEO_URL}
+                title="Video Panduan"
+                className="absolute top-0 left-0 w-full h-full"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
