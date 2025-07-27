@@ -92,18 +92,21 @@ const Home: React.FC = () => {
           <div className="text-center lg:w-2/3 w-full">
             <motion.h1
               variants={itemVariants}
-              className="title-font sm:text-4xl text-3xl mb-4 font-bold text-gray-900"
+              className="font-poppins font-extrabold sm:text-5xl text-4xl tracking-wide mb-4 text-gray-900"
             >
               Inventarisasi Data Kerusakan Pascabencana (SIAP)
             </motion.h1>
             <motion.p
               variants={itemVariants}
-              className="mb-8 leading-relaxed text-gray-800"
+              className="font-inter text-base md:text-lg leading-relaxed text-gray-800 mb-8"
             >
               Sistem digital berbasis web yang menjadi platform terpadu untuk
               inventarisasi data kerusakan pascabencana, terintegrasi dengan
-              data Kartu Inventaris Barang (KIB) melalui kalobrasi OPD teknis di
-              Kabupaten Pidie Jaya
+              data{" "}
+              <span className="italic font-medium">
+                Kartu Inventaris Barang (KIB)
+              </span>{" "}
+              melalui kolaborasi OPD teknis di Kabupaten Pidie Jaya.
             </motion.p>
           </div>
         </motion.div>
