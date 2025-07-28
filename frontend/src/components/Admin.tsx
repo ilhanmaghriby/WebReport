@@ -474,7 +474,7 @@ export default function Admin() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {m.userId?.username || "-"}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
+                      <td className="px-6 py-4 text-sm text-gray-900 max-w-xs">
                         {m.title}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -563,7 +563,15 @@ export default function Admin() {
                           </button>
 
                           {dropdownIdx === idx && (
-                            <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
+                            <div
+                              className="absolute right-0 z-50 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                              style={{
+                                position: "fixed",
+                                top: "auto",
+                                bottom: "auto",
+                                right: "auto",
+                              }}
+                            >
                               <div
                                 className="py-1"
                                 role="menu"

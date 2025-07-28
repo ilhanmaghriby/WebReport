@@ -94,6 +94,7 @@ export default function Upload() {
     nilaiBerat: "",
     nilaiSedang: "",
     nilaiRingan: "",
+    hargaSatuan: "",
     perkiraanKerusakan: "",
     perkiraanKerugian: "",
     totalKerusakanDanKerugian: "",
@@ -157,6 +158,7 @@ export default function Upload() {
       nilaiBerat: "",
       nilaiSedang: "",
       nilaiRingan: "",
+      hargaSatuan: "",
       perkiraanKerusakan: "",
       perkiraanKerugian: "",
       totalKerusakanDanKerugian: "",
@@ -384,6 +386,21 @@ export default function Upload() {
     const checked =
       type === "checkbox" ? (target as HTMLInputElement).checked : undefined;
 
+    if (name === "hargaSatuan") {
+      // ambil hanya angka
+      const rawValue = value.replace(/[^0-9]/g, "");
+      const numericValue = Number(rawValue);
+      setCurrentPrasarana((prev) => ({
+        ...prev,
+        hargaSatuan: numericValue,
+      }));
+      setFormattedValues((prev) => ({
+        ...prev,
+        hargaSatuan: formatRupiah(value),
+      }));
+      return;
+    }
+
     // Jika field termasuk dalam prasarana (e.g., prasarana.nama)
     if (name.startsWith("prasarana.")) {
       const fieldName = name.split(".")[1];
@@ -431,13 +448,12 @@ export default function Upload() {
     // Data kerusakan jumlah unit (dataBerat, dataSedang, dataRingan)
     if (["dataBerat", "dataSedang", "dataRingan"].includes(name)) {
       const kategori = name.replace("data", "").toLowerCase();
-      const numericValue = Number(value); // tidak diformat ke rupiah
 
       setCurrentPrasarana((prev) => ({
         ...prev,
         dataKerusakan: {
           ...prev.dataKerusakan,
-          [kategori]: numericValue,
+          [kategori]: value,
         },
       }));
       return;
@@ -923,6 +939,7 @@ export default function Upload() {
                         <InputField
                           label="Data Kerusakan Berat"
                           name="dataBerat"
+                          type="number"
                           value={currentPrasarana.dataKerusakan.berat}
                           onChange={handleChange}
                         />
@@ -940,6 +957,7 @@ export default function Upload() {
                         <InputField
                           label="Data Kerusakan Sedang"
                           name="dataSedang"
+                          type="number"
                           value={currentPrasarana.dataKerusakan.sedang}
                           onChange={handleChange}
                         />
@@ -957,6 +975,7 @@ export default function Upload() {
                         <InputField
                           label="Data Kerusakan Ringan"
                           name="dataRingan"
+                          type="number"
                           value={currentPrasarana.dataKerusakan.ringan}
                           onChange={handleChange}
                         />
@@ -985,10 +1004,10 @@ export default function Upload() {
                       onChange={handleChange}
                     />
                     <InputField
-                      label="Harga Satuan"
-                      name="prasarana.hargaSatuan"
-                      type="number"
-                      value={currentPrasarana.hargaSatuan}
+                      label="Harga Satuan (Rp)"
+                      name="hargaSatuan"
+                      type="text"
+                      value={formattedValues.hargaSatuan}
                       onChange={handleChange}
                     />
                   </div>
@@ -1004,7 +1023,7 @@ export default function Upload() {
                       label="Perkiraan Kerusakan (Rp)"
                       name="perkiraanKerusakan"
                       value={formattedValues.perkiraanKerusakan}
-                      readOnly
+                      disabled
                     />
                     <InputField
                       label="Perkiraan Kerugian (Rp)"

@@ -92,13 +92,13 @@ const Home: React.FC = () => {
           <div className="text-center lg:w-2/3 w-full">
             <motion.h1
               variants={itemVariants}
-              className="font-poppins font-extrabold sm:text-5xl text-4xl tracking-wide mb-4 text-gray-900"
+              className="font-poppins font-extrabold  text-3xl md:text-4xl tracking-wide mb-4 text-gray-900"
             >
               Inventarisasi Data Kerusakan Pascabencana (SIAP)
             </motion.h1>
             <motion.p
               variants={itemVariants}
-              className="font-inter text-base md:text-lg leading-relaxed text-gray-800 mb-8"
+              className="font-inter  text-base md:text-lg leading-relaxed text-gray-800 mb-8"
             >
               Sistem digital berbasis web yang menjadi platform terpadu untuk
               inventarisasi data kerusakan pascabencana, terintegrasi dengan
@@ -175,7 +175,7 @@ const Home: React.FC = () => {
             </p>
           </motion.div>
         ) : (
-          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+          <div className="max-w-7xl mx-auto grid grid-cols-1  gap-8 ">
             {reportData.map((report) => (
               <ReportCard
                 key={report._id}
