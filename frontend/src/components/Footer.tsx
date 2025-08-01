@@ -4,8 +4,8 @@ export default function Footer() {
       <div className="container mx-auto px-4">
         <div className=" border-gray-700 text-center text-xs opacity-75">
           <p>
-            © {new Date().getFullYear()} BPBD Kabupaten Pidie Jaya. All rights
-            reserved.
+            © 2025 aswanazisDGlalla RRBPBD Kabupaten Pidie Jaya. All
+            Right Reserved
           </p>
         </div>
       </div>
