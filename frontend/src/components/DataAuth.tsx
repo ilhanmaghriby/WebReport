@@ -25,7 +25,7 @@ export default function DataAuth() {
           );
         }
 
-        const res = await fetch("http://localhost:3000/users", {
+        const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/users`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -91,11 +91,14 @@ export default function DataAuth() {
 
     if (formValues) {
       try {
-        const res = await fetch("http://localhost:3000/auth/register", {
-          method: "POST",
-          headers: getTokenHeader(),
-          body: JSON.stringify(formValues),
-        });
+        const res = await fetch(
+          `${import.meta.env.VITE_BACKEND_URL}/auth/register`,
+          {
+            method: "POST",
+            headers: getTokenHeader(),
+            body: JSON.stringify(formValues),
+          }
+        );
 
         if (!res.ok) throw new Error("Gagal menambahkan pengguna");
 
@@ -155,7 +158,7 @@ export default function DataAuth() {
     if (newPassword) {
       try {
         const res = await fetch(
-          `http://localhost:3000/users/${userId}/password`,
+          `${import.meta.env.VITE_BACKEND_URL}/users/${userId}/password`,
           {
             method: "PUT",
             headers: getTokenHeader(),
@@ -198,10 +201,13 @@ export default function DataAuth() {
     if (!result.isConfirmed) return;
 
     try {
-      const res = await fetch(`http://localhost:3000/users/${userId}`, {
-        method: "DELETE",
-        headers: getTokenHeader(),
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/users/${userId}`,
+        {
+          method: "DELETE",
+          headers: getTokenHeader(),
+        }
+      );
 
       if (!res.ok) throw new Error("Gagal menghapus pengguna");
 
@@ -231,11 +237,14 @@ export default function DataAuth() {
     const newRole = currentRole === "user" ? "admin" : "user";
 
     try {
-      const res = await fetch(`http://localhost:3000/users/${userId}/role`, {
-        method: "PUT",
-        headers: getTokenHeader(),
-        body: JSON.stringify({ role: newRole }),
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/users/${userId}/role`,
+        {
+          method: "PUT",
+          headers: getTokenHeader(),
+          body: JSON.stringify({ role: newRole }),
+        }
+      );
 
       if (!res.ok) throw new Error("Gagal memperbarui peran");
 

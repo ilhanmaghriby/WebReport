@@ -52,7 +52,9 @@ const Home: React.FC = () => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch("http://localhost:3000/report/verified");
+        const response = await fetch(
+          `${import.meta.env.VITE_BACKEND_URL}/report/verified`
+        );
         const data = await response.json();
 
         const doneReports: ReportData[] = data.map((item: any) => ({

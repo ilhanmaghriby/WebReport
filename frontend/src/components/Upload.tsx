@@ -331,7 +331,7 @@ export default function Upload() {
         });
       });
 
-      const res = await fetch("http://localhost:3000/report", {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/report`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,

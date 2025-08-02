@@ -33,9 +33,12 @@ export default function NavbarProfile() {
         return;
       }
       try {
-        const res = await fetch("http://localhost:3000/auth/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(
+          `${import.meta.env.VITE_BACKEND_URL}/auth/profile`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         if (res.ok) {
           const data = await res.json();
           setUser(data);

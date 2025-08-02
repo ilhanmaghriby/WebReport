@@ -140,7 +140,7 @@ export default function Admin() {
             "Token tidak ditemukan. Silakan login terlebih dahulu."
           );
         }
-        const res = await fetch("http://localhost:3000/report", {
+        const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/report`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -183,11 +183,14 @@ export default function Admin() {
   const handleDownloadImagesAsZip = async (id: string, title: string) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:3000/report/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/report/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!res.ok) throw new Error("Gagal mengambil data laporan.");
       const detail = await res.json();
@@ -208,7 +211,7 @@ export default function Admin() {
       const folder = zip.folder("gambar")!;
 
       for (const relativeUrl of allImages) {
-        const fullUrl = `http://localhost:3000/${relativeUrl}`;
+        const fullUrl = `${import.meta.env.VITE_BACKEND_URL}/${relativeUrl}`;
         const filename = relativeUrl.split("/").pop() || "gambar.jpg";
 
         const imageRes = await fetch(fullUrl);
@@ -231,7 +234,7 @@ export default function Admin() {
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(
-        `http://localhost:3000/report/${member.id}/verify`,
+        `${import.meta.env.VITE_BACKEND_URL}/report/${member.id}/verify`,
         {
           method: "PUT",
           headers: {
@@ -296,12 +299,15 @@ export default function Admin() {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch(`http://localhost:3000/report/${member.id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/report/${member.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          method: "DELETE",
+        }
+      );
 
       if (!res.ok) throw new Error("Gagal menghapus laporan");
 
@@ -317,11 +323,14 @@ export default function Admin() {
   const handleViewClick = async (id: string) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:3000/report/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/report/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       const detail = await res.json();
 
       const title = detail?.title || "Laporan_Kerusakan";

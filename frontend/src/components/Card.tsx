@@ -75,7 +75,9 @@ const ReportCard: React.FC<ReportCardProps> = ({
 
   const handleExportExcel = async () => {
     try {
-      const res = await fetch(`http://localhost:3000/report/${_id}`);
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/report/${_id}`
+      );
       const detail = await res.json();
 
       const title = detail?.title || "Laporan_Kerusakan";
@@ -124,7 +126,9 @@ const ReportCard: React.FC<ReportCardProps> = ({
               <AnimatePresence mode="wait">
                 <motion.img
                   key={currentImageIndex}
-                  src={`http://localhost:3000/${allImages[currentImageIndex]}`}
+                  src={`${import.meta.env.VITE_BACKEND_URL}/${
+                    allImages[currentImageIndex]
+                  }`}
                   alt="Image"
                   variants={imageVariants}
                   initial="initial"

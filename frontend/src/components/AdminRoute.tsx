@@ -13,9 +13,12 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
       }
 
       try {
-        const res = await fetch("http://localhost:3000/auth/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(
+          `${import.meta.env.VITE_BACKEND_URL}/auth/profile`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
         if (!res.ok) {
           throw new Error("Token invalid or expired");

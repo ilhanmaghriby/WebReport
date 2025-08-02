@@ -136,11 +136,14 @@ export default function Edit() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch(`http://localhost:3000/report/${id}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+        const res = await fetch(
+          `${import.meta.env.VITE_BACKEND_URL}/report/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
 
         if (!res.ok) throw new Error("Gagal mengambil data");
 
@@ -410,7 +413,7 @@ export default function Edit() {
         // Jika gambar sudah ada (string path)
         return {
           file: img,
-          url: `http://localhost:3000/${img.replace(/\\/g, "/")}`,
+          url: `${import.meta.env.VITE_BACKEND_URL}/${img.replace(/\\/g, "/")}`,
         };
       } else {
         // Jika gambar baru (File object)
@@ -467,13 +470,16 @@ export default function Edit() {
     });
 
     try {
-      const res = await fetch(`http://localhost:3000/report/${id}`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: formData,
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/report/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: formData,
+        }
+      );
 
       if (!res.ok) {
         const errorData = await res.json();
@@ -865,10 +871,9 @@ export default function Edit() {
                               <img
                                 src={
                                   typeof img === "string"
-                                    ? `http://localhost:3000/${img.replace(
-                                        /\\/g,
-                                        "/"
-                                      )}`
+                                    ? `${
+                                        import.meta.env.VITE_BACKEND_URL
+                                      }/${img.replace(/\\/g, "/")}`
                                     : URL.createObjectURL(img)
                                 }
                                 alt={`preview-${idx}`}
