@@ -53,7 +53,7 @@ const ReportCard: React.FC<ReportCardProps> = ({
 }) => {
   const [showMap, setShowMap] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isHovering, setIsHovering] = useState(false);
+  const [, setIsHovering] = useState(false);
 
   // Gabungkan semua gambar dari prasaranaItems
   const allImages: string[] = prasaranaItems.flatMap(
