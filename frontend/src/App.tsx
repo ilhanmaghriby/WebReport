@@ -7,15 +7,25 @@ import Dashboard from "./components/Dashboard";
 import UserRoute from "./components/UserRoute";
 import AdminRoute from "./components/AdminRoute";
 import Edit from "./components/Edit";
-import Layout from "./components/Layout"; // ✅ Import Layout
+import Layout from "./components/Layout";
 import DataAuth from "./components/DataAuth";
+import GuestRoute from "./components/GuestRoute";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         {/* Halaman tanpa Navbar/Footer */}
-        <Route path="/login" element={<Login />} />
+
+        <Route
+          path="/login"
+          element={
+            <GuestRoute>
+              <Login />
+            </GuestRoute>
+          }
+        />
+
         <Route
           path="/upload"
           element={
