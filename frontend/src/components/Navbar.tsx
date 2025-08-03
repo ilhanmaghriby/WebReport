@@ -142,6 +142,25 @@ export default function NavbarProfile() {
             Video Panduan
           </button>
 
+          {/* Video Guide Button (Mobile) - Only SVG */}
+          <button
+            onClick={() => setShowVideo(true)}
+            className="sm:hidden inline-flex items-center p-2 border border-transparent rounded-lg shadow-sm text-white bg-[#2E3B4E] hover:bg-[#253046] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2E3B4E] transition-colors"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M4.5 3.5a.5.5 0 01.5-.5h.75a.5.5 0 01.5.5v13a.5.5 0 01-.5.5h-.75a.5.5 0 01-.5-.5v-13zM6.5 10l6 3.5V6.5L6.5 10z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </button>
+
           {token ? (
             <div className="relative">
               <button
