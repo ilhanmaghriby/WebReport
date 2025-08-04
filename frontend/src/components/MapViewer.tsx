@@ -1,5 +1,18 @@
+import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+
+// ↓ import image PNG supaya Vite copy ke /dist/assets dan ekspornya jadi URL
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
+
+// Override default icon supaya Leaflet tahu URL yang benar di build
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
 
 interface PrasaranaItem {
   prasarana: string;
@@ -15,10 +28,10 @@ interface MapViewerProps {
 
 export default function MapViewer({ prasaranaItems }: MapViewerProps) {
   const validLocations = prasaranaItems.filter(
-    (item) =>
-      typeof item.latitude === "number" &&
-      typeof item.longitude === "number" &&
-      (item.latitude !== 0 || item.longitude !== 0)
+    (it) =>
+      typeof it.latitude === "number" &&
+      typeof it.longitude === "number" &&
+      (it.latitude !== 0 || it.longitude !== 0)
   );
 
   const center: [number, number] = validLocations.length
@@ -36,11 +49,10 @@ export default function MapViewer({ prasaranaItems }: MapViewerProps) {
         attribution="&copy; OpenStreetMap contributors"
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-
       {validLocations.map((item, idx) => (
         <Marker key={idx} position={[item.latitude!, item.longitude!]}>
           <Popup>
-            {item.prasarana}
+            <strong>{item.prasarana}</strong>
             <br />
             {item.latitude}, {item.longitude}
           </Popup>
