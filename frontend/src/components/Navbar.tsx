@@ -15,7 +15,8 @@ export default function NavbarProfile() {
   const token = localStorage.getItem("token");
 
   // Ganti VIDEO_ID dengan ID video YouTube yang diinginkan
-  const VIDEO_URL = "https://www.youtube.com/embed/VIDEO_ID";
+  const VIDEO_URL =
+    "https://www.youtube.com/embed/v6UHkGyjpfo?si=_hKrq8q2_vODlm51";
 
   useEffect(() => {
     const handleScroll = () => {
