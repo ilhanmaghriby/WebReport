@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import MapViewer from "./MapViewer";
-import { exportToExcel } from "./exportToExcel";
+// import { exportToExcel } from "./exportToExcel";
 import Swal from "sweetalert2";
 
 interface ReportCardProps {
@@ -44,7 +44,7 @@ const imageVariants = {
 };
 
 const ReportCard: React.FC<ReportCardProps> = ({
-  _id,
+  // _id,
   title,
   sektor,
   subsektor,
@@ -73,24 +73,24 @@ const ReportCard: React.FC<ReportCardProps> = ({
     setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
   };
 
-  const handleExportExcel = async () => {
-    try {
-      const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/report/${_id}`
-      );
-      const detail = await res.json();
+  // const handleExportExcel = async () => {
+  //   try {
+  //     const res = await fetch(
+  //       `${import.meta.env.VITE_BACKEND_URL}/report/${_id}`
+  //     );
+  //     const detail = await res.json();
 
-      const title = detail?.title || "Laporan_Kerusakan";
-      await exportToExcel([detail], title);
-    } catch (err) {
-      console.error("Gagal ekspor Excel:", err);
-      Swal.fire({
-        icon: "error",
-        title: "Gagal",
-        text: "Gagal mengambil data laporan.",
-      });
-    }
-  };
+  //     const title = detail?.title || "Laporan_Kerusakan";
+  //     await exportToExcel([detail], title);
+  //   } catch (err) {
+  //     console.error("Gagal ekspor Excel:", err);
+  //     Swal.fire({
+  //       icon: "error",
+  //       title: "Gagal",
+  //       text: "Gagal mengambil data laporan.",
+  //     });
+  //   }
+  // };
 
   const handleOpenMap = () => {
     const validLocation = mapLocations.some(
@@ -247,7 +247,7 @@ const ReportCard: React.FC<ReportCardProps> = ({
               </svg>
               Peta
             </motion.button>
-            <motion.button
+            {/* <motion.button
               onClick={handleExportExcel}
               className="flex items-center gap-1 bg-[#F15A24] text-white px-4 py-2 rounded-lg hover:bg-orange-600 shadow"
               whileHover={{
@@ -271,7 +271,7 @@ const ReportCard: React.FC<ReportCardProps> = ({
                 />
               </svg>
               Lihat Data
-            </motion.button>
+            </motion.button> */}
           </motion.div>
         </div>
 
