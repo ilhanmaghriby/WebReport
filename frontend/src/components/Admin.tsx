@@ -275,6 +275,7 @@ export default function Admin() {
             "Token tidak ditemukan. Silakan login terlebih dahulu."
           );
         }
+
         const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/report`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -294,7 +295,15 @@ export default function Admin() {
           status: item.status,
         }));
 
-        setMembers(formatted);
+        // SORT BY CREATED AT DESC (TERBARU DI ATAS)
+        const sorted = formatted.sort(
+          (
+            a: { createdAt: string | number | Date },
+            b: { createdAt: string | number | Date }
+          ) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+
+        setMembers(sorted);
       } catch (err) {
         console.error("Gagal mengambil data", err);
       } finally {
