@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import { exportToExcel } from "./exportToExcel";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
+import { createPortal } from "react-dom";
 
 type StatusType = "done" | "in_progress" | "perbaikan" | "ditolak";
 
@@ -124,9 +125,143 @@ function StatusBadge({ status }: { status: StatusType }) {
   );
 }
 
+// Komponen Dropdown Portal untuk Desktop
+function DropdownPortal({
+  isOpen,
+  onClose,
+  onAction,
+  position,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onAction: (action: string) => void;
+  position: { top: number; left: number };
+}) {
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-50" onClick={onClose}>
+      <div
+        className="absolute bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none w-56"
+        style={{
+          top: position.top,
+          left: position.left,
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="py-1">
+          <button
+            onClick={() => onAction("done")}
+            className="flex items-center px-4 py-2 text-sm text-green-700 hover:bg-green-50 w-full text-left"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            Tandai Selesai
+          </button>
+          <button
+            onClick={() => onAction("in_progress")}
+            className="flex items-center px-4 py-2 text-sm text-yellow-700 hover:bg-yellow-50 w-full text-left"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            Tandai Sedang Diproses
+          </button>
+          <button
+            onClick={() => onAction("perbaikan")}
+            className="flex items-center px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 w-full text-left"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+            Minta Revisi
+          </button>
+          <button
+            onClick={() => onAction("ditolak")}
+            className="flex items-center px-4 py-2 text-sm text-red-700 hover:bg-red-50 w-full text-left"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+            Tolak Laporan
+          </button>
+          <div className="border-t border-gray-100"></div>
+          <button
+            onClick={() => onAction("delete")}
+            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
+            Hapus Laporan
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 export default function Admin() {
   const [members, setMembers] = useState<Member[]>([]);
   const [dropdownIdx, setDropdownIdx] = useState<number | null>(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -346,6 +481,37 @@ export default function Admin() {
     }
   };
 
+  const handleDropdownClick = (e: React.MouseEvent, idx: number) => {
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    setDropdownPosition({
+      top: rect.bottom + window.scrollY + 8,
+      left: rect.right + window.scrollX - 224, // 224 adalah lebar dropdown (w-56 = 14rem = 224px)
+    });
+    setDropdownIdx(idx === dropdownIdx ? null : idx);
+  };
+
+  const handleDropdownAction = (idx: number, action: string) => {
+    switch (action) {
+      case "done":
+        handleChangeProgress(idx, "done");
+        break;
+      case "in_progress":
+        handleChangeProgress(idx, "in_progress");
+        break;
+      case "perbaikan":
+        handleChangeProgress(idx, "perbaikan");
+        break;
+      case "ditolak":
+        handleChangeProgress(idx, "ditolak");
+        break;
+      case "delete":
+        handleDelete(idx);
+        break;
+    }
+    setDropdownIdx(null);
+  };
+
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-6 mt-16">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
@@ -497,7 +663,7 @@ export default function Admin() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <StatusBadge status={m.status} />
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2 relative">
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                           <button
                             onClick={() => handleViewClick(m.id)}
                             className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-[#F15A24] hover:bg-orange-700 focus:outline-none"
@@ -551,13 +717,7 @@ export default function Admin() {
                             <button
                               type="button"
                               className="inline-flex items-center p-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                                setDropdownIdx(
-                                  idx === dropdownIdx ? null : idx
-                                );
-                              }}
+                              onClick={(e) => handleDropdownClick(e, idx)}
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -574,134 +734,6 @@ export default function Admin() {
                                 />
                               </svg>
                             </button>
-
-                            {dropdownIdx === idx && (
-                              <div
-                                className="right-0 z-50 absolute mt-2 w-56 "
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <div
-                                  className="py-1 fixed origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                                  role="menu"
-                                  aria-orientation="vertical"
-                                >
-                                  <button
-                                    onClick={() =>
-                                      handleChangeProgress(idx, "done")
-                                    }
-                                    className="flex items-center px-4 py-2 text-sm text-green-700 hover:bg-green-50 w-full text-left"
-                                    role="menuitem"
-                                  >
-                                    <svg
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      className="h-4 w-4 mr-2"
-                                      fill="none"
-                                      viewBox="0 0 24 24"
-                                      stroke="currentColor"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M5 13l4 4L19 7"
-                                      />
-                                    </svg>
-                                    Tandai Selesai
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      handleChangeProgress(idx, "in_progress")
-                                    }
-                                    className="flex items-center px-4 py-2 text-sm text-yellow-700 hover:bg-yellow-50 w-full text-left"
-                                    role="menuitem"
-                                  >
-                                    <svg
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      className="h-4 w-4 mr-2"
-                                      fill="none"
-                                      viewBox="0 0 24 24"
-                                      stroke="currentColor"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                                      />
-                                    </svg>
-                                    Tandai Sedang Diproses
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      handleChangeProgress(idx, "perbaikan")
-                                    }
-                                    className="flex items-center px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 w-full text-left"
-                                    role="menuitem"
-                                  >
-                                    <svg
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      className="h-4 w-4 mr-2"
-                                      fill="none"
-                                      viewBox="0 0 24 24"
-                                      stroke="currentColor"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                      />
-                                    </svg>
-                                    Minta Revisi
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      handleChangeProgress(idx, "ditolak")
-                                    }
-                                    className="flex items-center px-4 py-2 text-sm text-red-700 hover:bg-red-50 w-full text-left"
-                                    role="menuitem"
-                                  >
-                                    <svg
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      className="h-4 w-4 mr-2"
-                                      fill="none"
-                                      viewBox="0 0 24 24"
-                                      stroke="currentColor"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M6 18L18 6M6 6l12 12"
-                                      />
-                                    </svg>
-                                    Tolak Laporan
-                                  </button>
-                                  <div className="border-t border-gray-100"></div>
-                                  <button
-                                    onClick={() => handleDelete(idx)}
-                                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                                    role="menuitem"
-                                  >
-                                    <svg
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      className="h-4 w-4 mr-2"
-                                      fill="none"
-                                      viewBox="0 0 24 24"
-                                      stroke="currentColor"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                      />
-                                    </svg>
-                                    Hapus Laporan
-                                  </button>
-                                </div>
-                              </div>
-                            )}
                           </div>
                         </td>
                       </tr>
@@ -951,6 +983,14 @@ export default function Admin() {
           )}
         </div>
       )}
+
+      {/* Portal untuk Desktop Dropdown */}
+      <DropdownPortal
+        isOpen={dropdownIdx !== null}
+        onClose={() => setDropdownIdx(null)}
+        onAction={(action) => handleDropdownAction(dropdownIdx!, action)}
+        position={dropdownPosition}
+      />
     </div>
   );
 }
