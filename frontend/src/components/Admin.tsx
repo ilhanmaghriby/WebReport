@@ -1,4 +1,4 @@
-import { useEffect, useState, type JSX } from "react";
+import { useEffect, useState, useRef, type JSX } from "react";
 import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
 import { exportToExcel } from "./exportToExcel";
@@ -137,11 +137,33 @@ function DropdownPortal({
   onAction: (action: string) => void;
   position: { top: number; left: number };
 }) {
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen || !dropdownRef.current) return;
+
+    const dropdown = dropdownRef.current;
+    const viewportHeight = window.innerHeight;
+    const dropdownHeight = dropdown.offsetHeight;
+    const dropdownBottom = position.top + dropdownHeight;
+
+    // Jika dropdown akan terpotong di bawah
+    if (dropdownBottom > viewportHeight) {
+      const adjustedTop = position.top - (dropdownBottom - viewportHeight) - 10;
+      dropdown.style.top = `${adjustedTop}px`;
+      dropdown.style.left = `${position.left}px`;
+    } else {
+      dropdown.style.top = `${position.top}px`;
+      dropdown.style.left = `${position.left}px`;
+    }
+  }, [isOpen, position]);
+
   if (!isOpen) return null;
 
   return createPortal(
     <div className="fixed inset-0 z-50" onClick={onClose}>
       <div
+        ref={dropdownRef}
         className="absolute bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none w-56"
         style={{
           top: position.top,
@@ -264,6 +286,14 @@ export default function Admin() {
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsDesktop(window.innerWidth >= 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -313,6 +343,17 @@ export default function Admin() {
 
     fetchData();
   }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (dropdownIdx !== null) {
+        setDropdownIdx(null);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [dropdownIdx]);
 
   const filteredMembers = members.filter(
     (member) =>
@@ -493,9 +534,24 @@ export default function Admin() {
   const handleDropdownClick = (e: React.MouseEvent, idx: number) => {
     e.stopPropagation();
     const rect = e.currentTarget.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const dropdownWidth = 224; // w-56 = 14rem = 224px
+
+    let leftPosition = rect.right - dropdownWidth;
+
+    // Jika dropdown akan keluar dari layar di sebelah kiri
+    if (leftPosition < 10) {
+      leftPosition = 10;
+    }
+
+    // Jika dropdown akan keluar dari layar di sebelah kanan
+    if (leftPosition + dropdownWidth > viewportWidth - 10) {
+      leftPosition = viewportWidth - dropdownWidth - 10;
+    }
+
     setDropdownPosition({
-      top: rect.bottom + window.scrollY + 8,
-      left: rect.right + window.scrollX - 224, // 224 adalah lebar dropdown (w-56 = 14rem = 224px)
+      top: rect.bottom + 8,
+      left: leftPosition,
     });
     setDropdownIdx(idx === dropdownIdx ? null : idx);
   };
@@ -725,7 +781,9 @@ export default function Admin() {
                           <div className="relative inline-block text-left">
                             <button
                               type="button"
-                              className="inline-flex items-center p-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+                              className={`inline-flex items-center p-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium ${
+                                dropdownIdx === idx ? "bg-gray-100" : "bg-white"
+                              } text-gray-700 hover:bg-gray-50 focus:outline-none`}
                               onClick={(e) => handleDropdownClick(e, idx)}
                             >
                               <svg
@@ -845,7 +903,9 @@ export default function Admin() {
                         <div className="relative inline-block text-left">
                           <button
                             type="button"
-                            className="inline-flex items-center p-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+                            className={`inline-flex items-center p-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium ${
+                              dropdownIdx === idx ? "bg-gray-100" : "bg-white"
+                            } text-gray-700 hover:bg-gray-50 focus:outline-none`}
                             onClick={(e) => {
                               e.stopPropagation();
                               setDropdownIdx(idx === dropdownIdx ? null : idx);
@@ -868,117 +928,169 @@ export default function Admin() {
                           </button>
 
                           {dropdownIdx === idx && (
-                            <div className="absolute right-0 z-50 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                              <div className="py-1">
-                                <button
-                                  onClick={() =>
-                                    handleChangeProgress(idx, "done")
-                                  }
-                                  className="flex items-center px-4 py-2 text-sm text-green-700 hover:bg-green-50 w-full text-left"
-                                >
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-4 w-4 mr-2"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
+                            <div
+                              className="fixed inset-0 z-50 bg-black bg-opacity-50 md:hidden"
+                              onClick={() => setDropdownIdx(null)}
+                            >
+                              {" "}
+                              <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-lg shadow-xl">
+                                {" "}
+                                <div className="py-2 px-4 border-b border-gray-200 flex justify-between items-center">
+                                  {" "}
+                                  <h3 className="font-medium text-gray-900">
+                                    {" "}
+                                    Pilih Aksi{" "}
+                                  </h3>{" "}
+                                  <button
+                                    onClick={() => setDropdownIdx(null)}
+                                    className="p-2 text-gray-500 hover:text-gray-700"
                                   >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M5 13l4 4L19 7"
-                                    />
-                                  </svg>
-                                  Tandai Selesai
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    handleChangeProgress(idx, "in_progress")
-                                  }
-                                  className="flex items-center px-4 py-2 text-sm text-yellow-700 hover:bg-yellow-50 w-full text-left"
-                                >
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-4 w-4 mr-2"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
+                                    {" "}
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      className="h-5 w-5"
+                                      viewBox="0 0 20 20"
+                                      fill="currentColor"
+                                    >
+                                      {" "}
+                                      <path
+                                        fillRule="evenodd"
+                                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                        clipRule="evenodd"
+                                      />{" "}
+                                    </svg>{" "}
+                                  </button>{" "}
+                                </div>{" "}
+                                <div className="py-1 overflow-y-auto max-h-96">
+                                  {" "}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleChangeProgress(idx, "done");
+                                      setDropdownIdx(null);
+                                    }}
+                                    className="flex items-center px-4 py-3 text-sm text-green-700 hover:bg-green-50 w-full text-left"
+                                    role="menuitem"
                                   >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                  </svg>
-                                  Tandai Sedang Diproses
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    handleChangeProgress(idx, "perbaikan")
-                                  }
-                                  className="flex items-center px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 w-full text-left"
-                                >
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-4 w-4 mr-2"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
+                                    {" "}
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      className="h-5 w-5 mr-3"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M5 13l4 4L19 7"
+                                      />
+                                    </svg>
+                                    Tandai Selesai
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleChangeProgress(idx, "in_progress");
+                                      setDropdownIdx(null);
+                                    }}
+                                    className="flex items-center px-4 py-3 text-sm text-yellow-700 hover:bg-yellow-50 w-full text-left"
+                                    role="menuitem"
                                   >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                    />
-                                  </svg>
-                                  Minta Revisi
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    handleChangeProgress(idx, "ditolak")
-                                  }
-                                  className="flex items-center px-4 py-2 text-sm text-red-700 hover:bg-red-50 w-full text-left"
-                                >
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-4 w-4 mr-2"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      className="h-5 w-5 mr-3"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                      />
+                                    </svg>
+                                    Tandai Sedang Diproses
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleChangeProgress(idx, "perbaikan");
+                                      setDropdownIdx(null);
+                                    }}
+                                    className="flex items-center px-4 py-3 text-sm text-blue-700 hover:bg-blue-50 w-full text-left"
+                                    role="menuitem"
                                   >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M6 18L18 6M6 6l12 12"
-                                    />
-                                  </svg>
-                                  Tolak Laporan
-                                </button>
-                                <div className="border-t border-gray-100"></div>
-                                <button
-                                  onClick={() => handleDelete(idx)}
-                                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                                >
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-4 w-4 mr-2"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      className="h-5 w-5 mr-3"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                      />
+                                    </svg>
+                                    Minta Revisi
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleChangeProgress(idx, "ditolak");
+                                      setDropdownIdx(null);
+                                    }}
+                                    className="flex items-center px-4 py-3 text-sm text-red-700 hover:bg-red-50 w-full text-left"
+                                    role="menuitem"
                                   >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                    />
-                                  </svg>
-                                  Hapus Laporan
-                                </button>
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      className="h-5 w-5 mr-3"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M6 18L18 6M6 6l12 12"
+                                      />
+                                    </svg>
+                                    Tolak Laporan
+                                  </button>
+                                  <div className="border-t border-gray-200 my-1"></div>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDelete(idx);
+                                      setDropdownIdx(null);
+                                    }}
+                                    className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                                    role="menuitem"
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      className="h-5 w-5 mr-3"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                      />
+                                    </svg>
+                                    Hapus Laporan
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           )}
@@ -994,12 +1106,14 @@ export default function Admin() {
       )}
 
       {/* Portal untuk Desktop Dropdown */}
-      <DropdownPortal
-        isOpen={dropdownIdx !== null}
-        onClose={() => setDropdownIdx(null)}
-        onAction={(action) => handleDropdownAction(dropdownIdx!, action)}
-        position={dropdownPosition}
-      />
+      {isDesktop && (
+        <DropdownPortal
+          isOpen={dropdownIdx !== null}
+          onClose={() => setDropdownIdx(null)}
+          onAction={(action) => handleDropdownAction(dropdownIdx!, action)}
+          position={dropdownPosition}
+        />
+      )}
     </div>
   );
 }
